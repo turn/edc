@@ -3,4 +3,10 @@
  * Proprietary and confidential.
  */
 
-include 'edc-service', 'edc-client', 'edc-api'
+group = 'com.turn'
+version = '0.1'
+
+dependencies {
+
+}
+

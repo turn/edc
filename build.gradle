@@ -7,7 +7,7 @@ apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'idea'
 
-group = 'com.turn'
+group = 'com.turn.edc'
 version = '0.1'
 
 repositories {
@@ -19,7 +19,7 @@ subprojects {
     apply plugin: 'maven'
     apply plugin: 'idea'
 
-    group = 'com.turn'
+    group = 'com.turn.edc'
 
     repositories {
         mavenCentral()
