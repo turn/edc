@@ -1,0 +1,6 @@
+/*
+ * Copyright (C) 2016 Turn Inc. All Rights Reserved.
+ * Proprietary and confidential.
+ */
+
+include 'edc-service', 'edc-client'

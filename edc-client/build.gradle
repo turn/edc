@@ -1,0 +1,11 @@
+/*
+ * Copyright (C) 2016 Turn Inc. All Rights Reserved.
+ * Proprietary and confidential.
+ */
+
+group = 'com.turn'
+version = '0.1'
+
+dependencies {
+
+}
