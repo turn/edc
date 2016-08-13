@@ -8,4 +8,14 @@ version = '0.1'
 
 dependencies {
 
+    compile 'io.reactivex:rxjava:1.1.8',
+            'com.google.guava:guava:13.0.1'
+
+    compile group: 'redis.clients',         name: 'jedis',                      version: '2.8.1'
+    compile group: 'commons-codec',         name: 'commons-codec',          version: '1.10'
+
+    compile 'com.orbitz.consul:consul-client:0.12.6'
+    compile group: 'org.apache.curator',   name: 'curator-x-discovery',     version: '2.4.2'
+
+	compile group: 'com.google.inject', name: 'guice', version: '3.0'
 }
