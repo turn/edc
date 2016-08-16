@@ -7,11 +7,14 @@ package com.turn.edc.selection;
 
 import com.turn.edc.discovery.CacheInstance;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * Add class description
@@ -117,8 +120,22 @@ public class WeightedDistributionSelection {
 		return selectAlias ? alias[column] : column;
 	}
 
-	public CacheInstance selectInstance() {
-		int i = selectIndex();
-		return i >= 0 ? this.instances.get(i) : null;
+	public Collection<CacheInstance> selectInstances(int n) {
+
+		if (n <= this.instances.size()) {
+			return this.instances;
+		}
+
+		Set<CacheInstance> selections = Sets.newHashSetWithExpectedSize(n);
+
+		for (int i = 0 ; i < n ; i++) {
+			CacheInstance selected = this.instances.get(selectIndex());
+			while (!selections.contains(selected)) {
+				selected = this.instances.get(selectIndex());
+			}
+			selections.add(selected);
+		}
+
+		return selections;
 	}
 }

@@ -14,8 +14,6 @@ import com.google.common.net.HostAndPort;
  */
 
 public class CacheInstance {
-	public static final String EDC_SERVICE_NAME = "EDC-CLUSTER";
-
 	private final HostAndPort hostAndPort;
 	private final int cacheSize;
 	private final int hashCode;
@@ -31,7 +29,7 @@ public class CacheInstance {
 	}
 
 	public HostAndPort getHostAndPort() {
-		return this.getHostAndPort();
+		return this.hostAndPort;
 	}
 
 	public int getCacheSize() {

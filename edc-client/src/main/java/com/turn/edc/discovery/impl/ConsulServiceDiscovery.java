@@ -5,15 +5,13 @@
 
 package com.turn.edc.discovery.impl;
 
-import com.turn.edc.discovery.ServiceDiscovery;
 import com.turn.edc.discovery.CacheInstance;
-import com.turn.edc.router.StoreEventRouter;
-import com.turn.edc.selection.CacheInstanceSelector;
+import com.turn.edc.discovery.DiscoveryListener;
+import com.turn.edc.discovery.ServiceDiscovery;
 
+import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
-import com.google.common.collect.Lists;
 import com.orbitz.consul.Consul;
 import com.orbitz.consul.HealthClient;
 import com.orbitz.consul.cache.ServiceHealthCache;
@@ -23,38 +21,48 @@ import com.orbitz.consul.cache.ServiceHealthCache;
  *
  * @author tshiou
  */
-public class ConsulServiceDiscovery implements ServiceDiscovery {
+public class ConsulServiceDiscovery extends DiscoveryListener implements ServiceDiscovery {
 
+	private final Consul consul;
 	private final ServiceHealthCache servicesCache;
-	private AtomicReference<List<CacheInstance>> servicesListReference;
-
-	public ConsulServiceDiscovery(String consulURL) {
-
-		List<CacheInstance> initialMap = Lists.newArrayList();
-		this.servicesListReference = new AtomicReference<>(initialMap);
+	private List<CacheInstance> liveInstances;
 
 
+	public ConsulServiceDiscovery(String consulURL, String serviceName) {
 
-		Consul consul = Consul.builder().build(); // connect to Consul on localhost
+		this.consul = Consul.builder().build(); // connect to Consul on localhost
 		HealthClient healthClient = consul.healthClient();
 
-		this.servicesCache = ServiceHealthCache.newCache(healthClient, "edc-cluster");
-		this.servicesCache.addListener(new ConsulCacheListener(consul, servicesListReference));
+		this.servicesCache = ServiceHealthCache.newCache(healthClient, serviceName);
+		attachListeners(this);
+	}
 
+	@Override
+	public void start() throws IOException {
 		try {
 			servicesCache.start();
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new IOException(e);
 		}
 	}
 
 	@Override
-	public void initialize(StoreEventRouter router, CacheInstanceSelector selector) {
-
+	public void shutdown() {
 	}
 
 	public List<CacheInstance> getAvailableInstances() {
-		return servicesListReference.get();
+		return liveInstances;
 	}
 
+	@Override
+	public void attachListeners(DiscoveryListener... listeners) {
+		for (DiscoveryListener listener : listeners) {
+			this.servicesCache.addListener(new ConsulCacheListener(consul, listener));
+		}
+	}
+
+	@Override
+	public void update(List<CacheInstance> instances) {
+		this.liveInstances = instances;
+	}
 }

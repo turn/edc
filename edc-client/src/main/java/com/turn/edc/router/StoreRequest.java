@@ -11,20 +11,14 @@ package com.turn.edc.router;
  * @author tshiou
  */
 public class StoreRequest {
-	private final String hostPort;
 	private final String key;
 	private final byte[] payload;
 	private final int ttl;
 
-	public StoreRequest(String hostPort, String key, byte[] payload, int ttl) {
-		this.hostPort =  hostPort;
+	public StoreRequest(String key, byte[] payload, int ttl) {
 		this.key = key;
 		this.payload = payload;
 		this.ttl = ttl;
-	}
-
-	public String getHostPort() {
-		return this.hostPort;
 	}
 
 	public String getKey() {

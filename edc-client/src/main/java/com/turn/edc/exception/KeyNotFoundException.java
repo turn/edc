@@ -3,7 +3,7 @@
  * Proprietary and confidential.
  */
 
-package com.turn.edc.client;
+package com.turn.edc.exception;
 
 /**
  * Add class description
@@ -11,4 +11,7 @@ package com.turn.edc.client;
  * @author tshiou
  */
 public class KeyNotFoundException extends Exception {
+	public KeyNotFoundException(String key) {
+		super("Key not found in cache" + key);
+	}
 }

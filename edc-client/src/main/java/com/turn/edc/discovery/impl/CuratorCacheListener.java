@@ -6,9 +6,9 @@
 package com.turn.edc.discovery.impl;
 
 import com.turn.edc.discovery.CacheInstance;
+import com.turn.edc.discovery.DiscoveryListener;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 import com.google.common.collect.Lists;
 import org.apache.curator.framework.CuratorFramework;
@@ -25,23 +25,23 @@ import org.apache.curator.x.discovery.details.ServiceCacheListener;
 public class CuratorCacheListener implements ServiceCacheListener {
 
 	private final ServiceCache<CacheInstance> serviceCache;
-	private AtomicReference<List<CacheInstance>> servicesListReference;
+	private final DiscoveryListener listener;
 
-	public CuratorCacheListener(ServiceCache<CacheInstance> serviceCache, AtomicReference<List<CacheInstance>> servicesMapReference) {
+	public CuratorCacheListener(ServiceCache<CacheInstance> serviceCache, DiscoveryListener listener) {
 		this.serviceCache = serviceCache;
-		this.servicesListReference = servicesMapReference;
+		this.listener = listener;
 	}
 
 	@Override
 	public void cacheChanged() {
-		List<CacheInstance> newMap = Lists.newArrayList();
+		List<CacheInstance> newList = Lists.newArrayList();
 
 		List<ServiceInstance<CacheInstance>> instances = this.serviceCache.getInstances();
 		for (ServiceInstance<CacheInstance> instance : instances) {
-			newMap.add(instance.getPayload());
+			newList.add(instance.getPayload());
 		}
 
-		servicesListReference.getAndSet(newMap);
+		this.listener.update(newList);
 	}
 
 	@Override

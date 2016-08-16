@@ -5,21 +5,33 @@
 
 package com.turn.edc.storage;
 
-import com.turn.edc.client.KeyNotFoundException;
+import com.turn.edc.exception.KeyNotFoundException;
+import com.turn.edc.router.StoreRequest;
 
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
+import com.google.common.eventbus.Subscribe;
+
 /**
- * Storage layer connector interface
+ * ConnectionFactory layer connector interface
  *
  * @author tshiou
  */
-public interface StorageConnector {
+public abstract class StorageConnector {
 
-	void store(String key, byte[] value, int ttl, int timeout) throws IOException;
+	public abstract void store(String key, byte[] value, int ttl, int timeout) throws IOException;
 
-	byte[] get(String key, int timeout) throws KeyNotFoundException, TimeoutException, IOException;
+	public abstract byte[] get(String key, int timeout) throws KeyNotFoundException, TimeoutException, IOException;
 
-	void close();
+	public abstract void close();
+
+	@Subscribe
+	public void handleStoreRequest(StoreRequest request) {
+		try {
+			this.store(request.getKey(), request.getPayload(), request.getTtl(), 10);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }

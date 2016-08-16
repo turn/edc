@@ -5,9 +5,7 @@
 
 package com.turn.edc.discovery;
 
-import com.turn.edc.router.StoreEventRouter;
-import com.turn.edc.selection.CacheInstanceSelector;
-
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -17,7 +15,11 @@ import java.util.List;
  */
 public interface ServiceDiscovery {
 
-	void initialize(StoreEventRouter router, CacheInstanceSelector selector);
+	void start() throws IOException;
+
+	void shutdown();
 
 	List<CacheInstance> getAvailableInstances();
+
+	void attachListeners(DiscoveryListener... listeners);
 }

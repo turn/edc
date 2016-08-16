@@ -5,54 +5,42 @@
 
 package com.turn.edc.discovery.impl;
 
-import com.turn.edc.discovery.ServiceDiscovery;
 import com.turn.edc.discovery.CacheInstance;
-import com.turn.edc.router.StoreEventRouter;
-import com.turn.edc.selection.CacheInstanceSelector;
+import com.turn.edc.discovery.DiscoveryListener;
+import com.turn.edc.discovery.ServiceDiscovery;
 
+import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.imps.CuratorFrameworkState;
+import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.curator.x.discovery.ServiceCache;
 import org.apache.curator.x.discovery.ServiceDiscoveryBuilder;
-import org.apache.curator.x.discovery.ServiceProvider;
 import org.apache.curator.x.discovery.details.JsonInstanceSerializer;
-import org.apache.curator.x.discovery.strategies.RandomStrategy;
 
 /**
  * Add class description
  *
  * @author tshiou
  */
-public class CuratorServiceDiscovery implements ServiceDiscovery {
+public class CuratorServiceDiscovery extends DiscoveryListener implements ServiceDiscovery {
 
-	@Inject
 	private CuratorFramework curator;
 
 	private org.apache.curator.x.discovery.ServiceDiscovery serviceDiscovery;
 
-	private ServiceCache serviceCache;
+	private ServiceCache<CacheInstance> serviceCache;
 
-	private CuratorCacheListener cacheListener;
-
-	private AtomicReference<List<CacheInstance>> servicesListReference;
+	private List<CacheInstance> liveInstances;
 
 	@SuppressWarnings("unchecked")
-	public CuratorServiceDiscovery(String zkConnectionString) {
-
-		if (curator.getState() == CuratorFrameworkState.LATENT) {
-			curator.start();
-		}
+	public CuratorServiceDiscovery(String zkConnectionString, String serviceName) {
+		this.curator = CuratorFrameworkFactory.newClient(zkConnectionString, new ExponentialBackoffRetry(1000, 3));
 
 		JsonInstanceSerializer<CacheInstance> serializer =
 				new JsonInstanceSerializer<>(CacheInstance.class);
-
-		List<CacheInstance> initialMap = Lists.newArrayList();
-		this.servicesListReference = new AtomicReference<>(initialMap);
 
 		this.serviceDiscovery = ServiceDiscoveryBuilder.builder(CacheInstance.class)
 				.client(curator)
@@ -60,52 +48,50 @@ public class CuratorServiceDiscovery implements ServiceDiscovery {
 				.serializer(serializer)
 				.build();
 
-		try {
-			this.serviceDiscovery.start();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		// Service discovery provider
-		ServiceProvider provider = serviceDiscovery.serviceProviderBuilder()
-				.serviceName(CacheInstance.EDC_SERVICE_NAME)
-				.providerStrategy(new RandomStrategy<CacheInstance>())
-				.build();
-
-		try {
-			provider.start();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		try {
-			serviceDiscovery.start();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
 		this.serviceCache = serviceDiscovery.serviceCacheBuilder()
-				.name(CacheInstance.EDC_SERVICE_NAME)
+				.name(serviceName)
 				.build();
 
-		// Could throw Exception
-		try {
-			this.serviceCache.start();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		this.cacheListener = new CuratorCacheListener(this.serviceCache, this.servicesListReference);
-		this.serviceCache.addListener(this.cacheListener);
-
+		attachListeners(this);
 	}
 
 	@Override
-	public void initialize(StoreEventRouter router, CacheInstanceSelector selector) {
+	public void start() throws IOException {
 
+		try {
+			if (curator.getState() == CuratorFrameworkState.LATENT) {
+				curator.start();
+			}
+			this.serviceDiscovery.start();
+			this.serviceCache.start();
+		} catch (Exception e) {
+			throw new IOException(e);
+		}
+	}
+
+	@Override
+	public void shutdown() {
+		try {
+			this.serviceDiscovery.close();
+			this.serviceCache.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public List<CacheInstance> getAvailableInstances() {
-		return servicesListReference.get();
+		return this.liveInstances;
+	}
+
+	@Override
+	public void attachListeners(DiscoveryListener... listeners) {
+		for (DiscoveryListener listener : listeners) {
+			this.serviceCache.addListener(new CuratorCacheListener(this.serviceCache, listener));
+		}
+	}
+
+	@Override
+	public void update(List<CacheInstance> instances) {
+		this.liveInstances = instances;
 	}
 }

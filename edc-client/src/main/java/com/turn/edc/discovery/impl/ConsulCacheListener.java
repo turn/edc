@@ -6,10 +6,10 @@
 package com.turn.edc.discovery.impl;
 
 import com.turn.edc.discovery.CacheInstance;
+import com.turn.edc.discovery.DiscoveryListener;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
@@ -27,13 +27,13 @@ import com.orbitz.consul.model.health.ServiceHealth;
  */
 public class ConsulCacheListener implements ConsulCache.Listener<ServiceHealthKey, ServiceHealth> {
 
-	private Consul consul;
-	private AtomicReference<List<CacheInstance>> servicesListReference;
+	private final Consul consul;
+	private final DiscoveryListener listener;
 	// TODO: We can make this GC free by keeping the old reference and swapping
 
-	public ConsulCacheListener(Consul consul, AtomicReference<List<CacheInstance>> servicesListReference) {
+	public ConsulCacheListener(Consul consul, DiscoveryListener listener) {
 		this.consul = consul;
-		this.servicesListReference = servicesListReference;
+		this.listener = listener;
 	}
 
 	@Override
@@ -53,6 +53,6 @@ public class ConsulCacheListener implements ConsulCache.Listener<ServiceHealthKe
 			newList.add(CacheInstance.fromString(cacheInstanceString));
 		}
 
-		servicesListReference.getAndSet(newList);
+		this.listener.update(newList);
 	}
 }

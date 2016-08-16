@@ -5,7 +5,7 @@
 
 package com.turn.edc.storage.impl;
 
-import com.turn.edc.client.KeyNotFoundException;
+import com.turn.edc.exception.KeyNotFoundException;
 import com.turn.edc.storage.StorageConnector;
 
 import java.io.IOException;
@@ -15,18 +15,24 @@ import org.apache.commons.codec.binary.Base64;
 import redis.clients.jedis.Jedis;
 
 /**
- * Storage connector to Redis using Jedis library
+ * ConnectionFactory connector to Redis using Jedis library
  * (https://github.com/xetorthio/jedis)
  *
  * @author tshiou
  */
-public class JedisStorageConnector implements StorageConnector {
+public class JedisStorageConnector extends StorageConnector {
 
 	private final Jedis jedis;
 
-	public JedisStorageConnector(String host, String port, int timeout) {
-		// TODO: Sanity check host and port
+	public JedisStorageConnector(String host, String port, int timeout) throws IOException {
+
 		this.jedis = new Jedis(host, Integer.parseInt(port), timeout);
+
+		try {
+			this.jedis.ping();
+		} catch (Exception e) {
+			throw new IOException(e);
+		}
 	}
 
 	@Override
@@ -47,7 +53,7 @@ public class JedisStorageConnector implements StorageConnector {
 			throw new IOException(e.getCause());
 		}
 		if (res == null) {
-			throw new KeyNotFoundException();
+			throw new KeyNotFoundException(key);
 		}
 		return Base64.decodeBase64(jedis.get(key));
 	}

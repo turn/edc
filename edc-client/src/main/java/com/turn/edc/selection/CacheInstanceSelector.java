@@ -6,7 +6,9 @@
 package com.turn.edc.selection;
 
 import com.turn.edc.discovery.CacheInstance;
+import com.turn.edc.discovery.DiscoveryListener;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -14,14 +16,19 @@ import java.util.List;
  *
  * @author tshiou
  */
-public class CacheInstanceSelector {
+public class CacheInstanceSelector extends DiscoveryListener {
 
 	private volatile WeightedDistributionSelection provider;
 
 	public CacheInstanceSelector() {
 	}
 
-	public void updateInstanceProvider(List<CacheInstance> availableInstances) {
+	public Collection<CacheInstance> select(int n) {
+		return provider.selectInstances(n);
+	}
+
+	@Override
+	public void update(List<CacheInstance> availableInstances) {
 		WeightedDistributionSelection newProvider =
 				new WeightedDistributionSelection(availableInstances);
 		this.provider = newProvider;
