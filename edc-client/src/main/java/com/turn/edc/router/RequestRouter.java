@@ -9,7 +9,6 @@ import com.turn.edc.exception.KeyNotFoundException;
 import com.turn.edc.discovery.CacheInstance;
 import com.turn.edc.discovery.DiscoveryListener;
 import com.turn.edc.storage.StorageConnection;
-import com.turn.edc.storage.StorageConnector;
 import com.turn.edc.storage.ConnectionFactory;
 
 import java.io.IOException;

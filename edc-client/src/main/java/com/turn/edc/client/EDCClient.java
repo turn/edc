@@ -129,6 +129,7 @@ public class EDCClient {
 		 */
 		public static class EDCStorageBuilder {
 
+			EDCStorageBuilder() {}
 
 			public EDCServiceDiscoveryBuilder withRedisStorage() {
 				return new EDCServiceDiscoveryBuilder(

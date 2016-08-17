@@ -3,4 +3,4 @@
  * Proprietary and confidential.
  */
 
-include 'edc-service', 'edc-client', 'edc-api'
+include ':edc-service', ':edc-client', ':edc-common'
