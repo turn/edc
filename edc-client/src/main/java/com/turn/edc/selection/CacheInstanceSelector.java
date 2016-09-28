@@ -7,6 +7,7 @@ package com.turn.edc.selection;
 
 import com.turn.edc.discovery.CacheInstance;
 import com.turn.edc.discovery.DiscoveryListener;
+import com.turn.edc.exception.InvalidParameterException;
 
 import java.util.Collection;
 import java.util.List;
@@ -23,7 +24,7 @@ public class CacheInstanceSelector extends DiscoveryListener {
 	public CacheInstanceSelector() {
 	}
 
-	public Collection<CacheInstance> select(int n) {
+	public Collection<CacheInstance> select(int n) throws InvalidParameterException {
 		return provider.selectInstances(n);
 	}
 

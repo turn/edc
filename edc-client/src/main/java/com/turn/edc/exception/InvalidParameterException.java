@@ -12,6 +12,10 @@ package com.turn.edc.exception;
  */
 public class InvalidParameterException extends Exception {
 
+	public InvalidParameterException(String message) {
+		super(message);
+	}
+
 	public InvalidParameterException(
 			String parameterName, String parameterValue, String message) {
 		super("Invalid parameter value " + parameterValue + " for parameter " + parameterName + ". " + message);
