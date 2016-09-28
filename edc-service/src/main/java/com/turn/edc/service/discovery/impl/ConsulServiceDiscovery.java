@@ -40,6 +40,11 @@ public class ConsulServiceDiscovery implements ServiceDiscovery {
 	}
 
 	@Override
+	public void start() {
+
+	}
+
+	@Override
 	public void close() {
 
 	}

@@ -14,9 +14,15 @@ import com.turn.edc.service.EDCAdminService;
  */
 public class Sandbox {
 
-	public static void main(String[] args) {
+
+	public static void main(String[] args) throws Exception {
+
 		EDCAdminService service =
-				EDCAdminService.builder().withRedisStorage("localhost", 6379).withZkServiceDiscovery("localhost:2181").forServiceType("EDC").build();
+				EDCAdminService.builder()
+						.withRedisStorage("localhost", 6379)
+						.withZkServiceDiscovery("localhost:2181")
+						.forServiceType("impCache")
+						.build();
 		service.start();
 	}
 }

@@ -8,5 +8,6 @@ version = '0.1'
 
 dependencies {
 	compile 'com.google.guava:guava:13.0.1'
+	compile group: 'org.apache.curator',   name: 'curator-x-discovery',     version: '2.4.2'
 }
 

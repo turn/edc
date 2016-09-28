@@ -16,6 +16,8 @@ public interface ServiceDiscovery {
 
 	void unregister();
 
+	void start();
+
 	void close();
 
 	boolean isRegistered();

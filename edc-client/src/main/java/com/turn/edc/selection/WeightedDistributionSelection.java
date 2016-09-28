@@ -6,6 +6,7 @@
 package com.turn.edc.selection;
 
 import com.turn.edc.discovery.CacheInstance;
+import com.turn.edc.exception.InvalidParameterException;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -106,9 +107,10 @@ public class WeightedDistributionSelection {
 			probability[large.removeLast()] = 1.0;
 	}
 
-	private int selectIndex() {
-		if (this.instances == null || this.probability == null || this.alias == null) {
-			return -1;
+	private int selectIndex() throws InvalidParameterException {
+		if (this.instances == null || this.probability == null || this.alias == null ||
+				this.instances.size() < 1) {
+			throw new InvalidParameterException("Not enough instances to select from: " + this.instances);
 		}
 
 		// Generate a uniform distribution over columns to inspect
@@ -120,7 +122,7 @@ public class WeightedDistributionSelection {
 		return selectAlias ? alias[column] : column;
 	}
 
-	public Collection<CacheInstance> selectInstances(int n) {
+	public Collection<CacheInstance> selectInstances(int n) throws InvalidParameterException {
 
 		if (n <= this.instances.size()) {
 			return this.instances;

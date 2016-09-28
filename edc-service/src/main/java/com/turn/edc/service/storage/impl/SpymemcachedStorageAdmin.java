@@ -7,6 +7,8 @@ package com.turn.edc.service.storage.impl;
 
 import com.turn.edc.service.storage.StorageAdmin;
 
+import java.io.IOException;
+
 import com.google.common.net.HostAndPort;
 
 /**
@@ -14,7 +16,7 @@ import com.google.common.net.HostAndPort;
  *
  * @author tshiou
  */
-public class SpymemcachedStorageAdmin implements StorageAdmin {
+public class SpymemcachedStorageAdmin extends StorageAdmin {
 	private final HostAndPort hostAndPort;
 
 	public SpymemcachedStorageAdmin(String host, int port) {
@@ -22,8 +24,13 @@ public class SpymemcachedStorageAdmin implements StorageAdmin {
 	}
 
 	@Override
-	public int start() {
+	public int getMaxSizeInMb() throws IOException {
 		return 0;
+	}
+
+	@Override
+	public boolean isHealthy() {
+		return false;
 	}
 
 	@Override

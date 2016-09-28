@@ -5,13 +5,17 @@
 
 package com.turn.edc.service.storage;
 
+import java.io.IOException;
+
 /**
  * Add class description
  *
  * @author tshiou
  */
-public interface StorageAdmin {
-	int start();
+public abstract class StorageAdmin {
+	public abstract int getMaxSizeInMb() throws IOException;
 
-	void stop();
+	public abstract boolean isHealthy();
+
+	public abstract void stop();
 }

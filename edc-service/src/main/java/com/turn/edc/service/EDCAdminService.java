@@ -5,12 +5,20 @@
 
 package com.turn.edc.service;
 
+import com.turn.edc.service.admin.EDCHealthCheck;
+import com.turn.edc.service.retry.NumberOfFailedAttemptsException;
+import com.turn.edc.service.retry.RetryLoop;
+import com.turn.edc.service.retry.RetryPolicy;
+import com.turn.edc.service.retry.impl.ExponentialRetryPolicy;
 import com.turn.edc.service.discovery.ServiceDiscovery;
 import com.turn.edc.service.discovery.impl.ConsulServiceDiscovery;
 import com.turn.edc.service.discovery.impl.CuratorServiceDiscovery;
 import com.turn.edc.service.storage.StorageAdmin;
 import com.turn.edc.service.storage.impl.JedisStorageAdmin;
 import com.turn.edc.service.storage.impl.SpymemcachedStorageAdmin;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Add class description
@@ -19,18 +27,64 @@ import com.turn.edc.service.storage.impl.SpymemcachedStorageAdmin;
  */
 public class EDCAdminService {
 
-	private final StorageAdmin admin;
-	private final ServiceDiscovery discovery;
+	private static final Logger logger = LoggerFactory.getLogger(EDCAdminService.class);
 
-	private EDCAdminService(StorageAdmin admin, ServiceDiscovery discovery) {
-		this.admin = admin;
-		this.discovery = discovery;
+	private final AdminThread adminThread;
+	private final ServiceDiscovery serviceDiscovery;
+
+	private EDCAdminService(StorageAdmin admin, ServiceDiscovery discovery, RetryPolicy retryPolicy) {
+		this.adminThread = new AdminThread(retryPolicy, admin, discovery);
+		this.serviceDiscovery = discovery;
 	}
 
 	public void start() {
+		logger.info("Starting thread...");
+		this.serviceDiscovery.start();
+		Thread t = new Thread(this.adminThread);
+		t.start();
+		try {
+			t.join();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		}
 
 	}
 
+	public void stop() {
+		this.adminThread.notify();
+		this.adminThread.shutdown();
+	}
+
+	private static class AdminThread implements Runnable {
+
+		private boolean shutdown = false;
+		private final RetryLoop retryLoop;
+		private final EDCHealthCheck healthCheck;
+
+		AdminThread(RetryPolicy retryPolicy, StorageAdmin storageAdmin, ServiceDiscovery serviceDiscovery) {
+			this.retryLoop = new RetryLoop(retryPolicy);
+			this.healthCheck = new EDCHealthCheck(storageAdmin, serviceDiscovery);
+		}
+
+		@Override
+		public void run() {
+
+			while (!shutdown) {
+				try {
+					Thread.sleep(this.retryLoop.attempt(this.healthCheck));
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				} catch (NumberOfFailedAttemptsException e) {
+					logger.error("Storage is dead and ejected from cluster. Shutting down admin now.");
+					break;
+				}
+			}
+		}
+
+		public void shutdown() {
+			this.shutdown = true;
+		}
+	}
 
 	public static Builder.EDCStorageBuilder builder() {
 		return new Builder.EDCStorageBuilder();
@@ -42,14 +96,20 @@ public class EDCAdminService {
 
 		private final StorageAdmin admin;
 		private final ServiceDiscovery discovery;
+		private RetryPolicy retryPolicy = new ExponentialRetryPolicy(2000, 8);
 
 		Builder(StorageAdmin admin, ServiceDiscovery discovery) {
 			this.admin = admin;
 			this.discovery = discovery;
 		}
 
+		public Builder withRetryPolicy(RetryPolicy retryPolicy) {
+			this.retryPolicy = retryPolicy;
+			return this;
+		}
+
 		public EDCAdminService build() {
-			return new EDCAdminService(this.admin, this.discovery);
+			return new EDCAdminService(this.admin, this.discovery, this.retryPolicy);
 		}
 
 		public static class EDCStorageBuilder {
