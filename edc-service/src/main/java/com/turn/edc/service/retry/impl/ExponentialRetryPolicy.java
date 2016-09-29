@@ -8,7 +8,8 @@ package com.turn.edc.service.retry.impl;
 import com.turn.edc.service.retry.RetryPolicy;
 
 /**
- * Add class description
+ * Retry policy that retries a maximum number of ties, with exponentially increasing
+ * delay between retries.
  *
  * @author tshiou
  */
@@ -23,15 +24,15 @@ public class ExponentialRetryPolicy implements RetryPolicy {
 
 
 	@Override
-	public boolean shouldContinue(int currentNumberOfAttempts) {
-		return currentNumberOfAttempts <= maxRetries;
+	public boolean shouldContinue(int currentNumberOfFailures) {
+		return currentNumberOfFailures <= maxRetries;
 	}
 
 	@Override
-	public long nextTryMs(int currentNumberOfAttempts) {
-		if (currentNumberOfAttempts == 0) {
+	public long nextTryMs(int currentNumberOfFailures) {
+		if (currentNumberOfFailures == 0) {
 			return initialSleepTimeMs;
 		}
-		return (long) Math.pow(2, currentNumberOfAttempts - 1) * 1000;
+		return (long) Math.pow(2, currentNumberOfFailures - 1) * 1000;
 	}
 }

@@ -54,14 +54,12 @@ public class EDCHealthCheck extends RetryAttempt {
 	}
 
 	@Override
-	public boolean stateChangeToProbation() {
+	public void stateChangeToProbation() {
 		this.serviceDiscovery.unregister();
-		return true;
 	}
 
 	@Override
-	public boolean stateChangeToEjected() {
+	public void stateChangeToEjected() {
 		this.serviceDiscovery.unregister();
-		return true;
 	}
 }

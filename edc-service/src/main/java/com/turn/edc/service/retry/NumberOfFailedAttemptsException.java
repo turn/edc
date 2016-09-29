@@ -6,7 +6,7 @@
 package com.turn.edc.service.retry;
 
 /**
- * Add class description
+ * Exception when a retry attempt has exceeded the maximum number of attempts
  *
  * @author tshiou
  */
