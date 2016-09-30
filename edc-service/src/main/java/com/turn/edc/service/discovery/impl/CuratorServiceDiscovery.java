@@ -19,13 +19,19 @@ import org.apache.curator.x.discovery.ServiceDiscoveryBuilder;
 import org.apache.curator.x.discovery.ServiceInstance;
 import org.apache.curator.x.discovery.details.InstanceSerializer;
 import org.apache.curator.x.discovery.details.JsonInstanceSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Add class description
+ * Curator (zookeeper) service discovery connector
  *
  * @author tshiou
  */
 public class CuratorServiceDiscovery implements ServiceDiscovery {
+	private static final Logger LOG = LoggerFactory.getLogger(CuratorServiceDiscovery.class);
+
+	private static final String BASE_PATH = "/edc";
+
 	private final String serviceType;
 	private final String serviceHost;
 	private final int servicePort;
@@ -48,7 +54,7 @@ public class CuratorServiceDiscovery implements ServiceDiscovery {
 
 		this.serviceRegistry = ServiceDiscoveryBuilder.builder(CacheInstance.class)
 				.client(this.curator)
-				.basePath("/edc")
+				.basePath(BASE_PATH)
 				.serializer(new CuratorSerializer())
 				.build();
 
@@ -85,7 +91,7 @@ public class CuratorServiceDiscovery implements ServiceDiscovery {
 		try {
 			serviceRegistry.unregisterService(serviceInstance);
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOG.error("Unable to register instance!", e);
 		}
 	}
 

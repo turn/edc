@@ -8,7 +8,7 @@ package com.turn.edc.service.discovery.impl;
 import com.turn.edc.service.discovery.ServiceDiscovery;
 
 /**
- * Add class description
+ * Consul service discovery connector
  *
  * @author tshiou
  */

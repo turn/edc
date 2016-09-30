@@ -21,7 +21,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Add class description
+ * EDC cache instance admin service
+ *
+ * This is the main entrypoint for the EDC service. It is responsible for:
+ *
+ * - Checking cache health
+ * - Registering the instance for service discovery
+ *
+ * To create an instance of an EDC admin service use the builder, then call start().
+ *
+ * For example:
+ *
+ * <pre>
+ * {@code
+ *		EDCAdminService service =
+ *				EDCAdminService.builder()
+ *						.withRedisStorage("localhost", 6379)
+ *						.withZkServiceDiscovery("localhost:2181")
+ *						.forServiceType("my-edc-service")
+ *						.build();
+ *		service.start();
+ * }
+ * </pre>
+
  *
  * @author tshiou
  */
@@ -37,19 +59,19 @@ public class EDCAdminService {
 		this.serviceDiscovery = discovery;
 	}
 
+	/**
+	 * Non-blocking call to start EDC admin thread.
+	 */
 	public void start() {
 		logger.info("Starting thread...");
 		this.serviceDiscovery.start();
 		Thread t = new Thread(this.adminThread);
 		t.start();
-		try {
-			t.join();
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-		}
-
 	}
 
+	/**
+	 * Shuts down the EDC admin service.
+	 */
 	public void stop() {
 		this.adminThread.notify();
 		this.adminThread.shutdown();
@@ -79,6 +101,9 @@ public class EDCAdminService {
 					break;
 				}
 			}
+			// Eject from discovery
+			logger.info("Ejecting instance from discovery");
+			this.healthCheck.stateChangeToEjected();
 		}
 
 		public void shutdown() {

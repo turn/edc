@@ -12,11 +12,11 @@ import java.io.IOException;
 import com.google.common.net.HostAndPort;
 
 /**
- * Add class description
+ * Storage admin for memcache using spymemcached
  *
  * @author tshiou
  */
-public class SpymemcachedStorageAdmin extends StorageAdmin {
+public class SpymemcachedStorageAdmin implements StorageAdmin {
 	private final HostAndPort hostAndPort;
 
 	public SpymemcachedStorageAdmin(String host, int port) {
