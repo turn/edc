@@ -6,13 +6,21 @@
 package com.turn.edc.service.retry;
 
 /**
- * Add class description
+ * A task that should be attempted
  *
  * @author tshiou
  */
 public abstract class RetryAttempt {
+	// Initial state. This task should never reach this state, only start here
 	private RetryState currentState = RetryState.INITIAL;
 
+	/**
+	 * Making the state change to healthy
+	 *
+	 * Will call the abstract method stateChangeToHealthy
+	 *
+	 * @return true if the state change is successful
+	 */
 	boolean toHealthy() {
 		// if not already healthy, set to to healthy status
 		if (RetryState.HEALTHY.equals(this.currentState) == false) {
@@ -28,6 +36,9 @@ public abstract class RetryAttempt {
 		return true;
 	}
 
+	/**
+	 * Makes the state change to probation
+	 */
 	void toProbation() {
 		if (RetryState.PROBATION.equals(this.currentState) == false) {
 			this.stateChangeToProbation();
@@ -35,6 +46,9 @@ public abstract class RetryAttempt {
 		this.currentState = RetryState.PROBATION;
 	}
 
+	/**
+	 * Makes the state change to ejected
+	 */
 	void toEjected() {
 		if (RetryState.EJECTED.equals(this.currentState) == false) {
 			this.stateChangeToEjected();
@@ -46,7 +60,7 @@ public abstract class RetryAttempt {
 
 	public abstract boolean stateChangeToHealthy();
 
-	public abstract boolean stateChangeToProbation();
+	public abstract void stateChangeToProbation();
 
-	public abstract boolean stateChangeToEjected();
+	public abstract void stateChangeToEjected();
 }

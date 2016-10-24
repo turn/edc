@@ -8,14 +8,21 @@ package com.turn.edc.service.storage;
 import java.io.IOException;
 
 /**
- * Add class description
+ * Storage admin interface
  *
  * @author tshiou
  */
-public abstract class StorageAdmin {
-	public abstract int getMaxSizeInMb() throws IOException;
+public interface StorageAdmin {
+	/**
+	 * Get size of cache in MB
+	 *
+	 * @return size of allocated cache size in MB
+	 *
+	 * @throws IOException If the storage layer is unreachable
+	 */
+	int getMaxSizeInMb() throws IOException;
 
-	public abstract boolean isHealthy();
+	boolean isHealthy();
 
-	public abstract void stop();
+	void stop();
 }

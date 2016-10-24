@@ -18,11 +18,11 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
 /**
- * Add class description
+ * Storage admin using Jedis redis java client
  *
  * @author tshiou
  */
-public class JedisStorageAdmin extends StorageAdmin {
+public class JedisStorageAdmin implements StorageAdmin {
 
 	private static final Logger LOG = LoggerFactory.getLogger(JedisStorageAdmin.class);
 
@@ -48,10 +48,8 @@ public class JedisStorageAdmin extends StorageAdmin {
 			for (String line : Splitter.on('\n').split(jedis.info())) {
 				if (line.contains(MAXMEMORY_KEY)) {
 					// returned in bytes
-					int cacheSize = (int) (Long.parseLong(
+					return (int) (Long.parseLong(
 							line.split(REDIS_INFO_SEPARATOR)[1].trim()) / 1000 / 1000);
-
-					return cacheSize;
 				}
 			}
 		} catch (JedisConnectionException jce) {

@@ -6,7 +6,7 @@
 package com.turn.edc.service.storage;
 
 /**
- * Add class description
+ * Storage layer type enumeration
  *
  * @author tshiou
  */
