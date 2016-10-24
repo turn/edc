@@ -1,0 +1,17 @@
+{
+  "service": {
+    "name": "redis",
+    "address": "127.0.0.1",
+    "port": 6379,
+    "enableTagOverride": false,
+    "checks": [
+      {
+	    "id": "redis",
+	    "name": "Redis TCP on port 6379",
+	    "tcp": "localhost:6379",
+	    "interval": "10s",
+	    "timeout": "1s"
+      }
+    ]
+  }
+}

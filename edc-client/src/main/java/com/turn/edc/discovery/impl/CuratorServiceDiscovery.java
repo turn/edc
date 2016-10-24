@@ -24,7 +24,9 @@ import org.apache.curator.x.discovery.ServiceInstance;
 import org.apache.curator.x.discovery.details.JsonInstanceSerializer;
 
 /**
- * Add class description
+ * Zookeeper-based service discovery connector
+ *
+ * Uses Curator API
  *
  * @author tshiou
  */

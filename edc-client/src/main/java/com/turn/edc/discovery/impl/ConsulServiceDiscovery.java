@@ -15,9 +15,12 @@ import java.util.List;
 import com.orbitz.consul.Consul;
 import com.orbitz.consul.HealthClient;
 import com.orbitz.consul.cache.ServiceHealthCache;
+import com.orbitz.consul.model.agent.Agent;
 
 /**
- * Add class description
+ * Consul-based service discovery connector
+ *
+ * Uses Orbitz's Consul HTTP API
  *
  * @author tshiou
  */
@@ -34,6 +37,7 @@ public class ConsulServiceDiscovery extends DiscoveryListener implements Service
 		HealthClient healthClient = consul.healthClient();
 
 		this.servicesCache = ServiceHealthCache.newCache(healthClient, serviceName);
+
 		attachListeners(this);
 	}
 
