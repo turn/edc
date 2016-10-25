@@ -50,15 +50,16 @@ public class ConsulCacheListener implements ConsulCache.Listener<ServiceHealthKe
 	public void notify(Map<ServiceHealthKey, ServiceHealth> newValues) {
 		LOG.debug("Service change notification received");
 		List<CacheInstance> newList = Lists.newArrayList();
-		KeyValueClient kvClient = consul.keyValueClient();
+
 		for (ServiceHealthKey serviceKey : newValues.keySet()) {
+			// Get cache instance host/port from consul health key
 			HostAndPort hostAndPort = HostAndPort.fromParts(serviceKey.getHost(), serviceKey.getPort());
-			Optional<String> lookup = kvClient.getValueAsString(hostAndPort.toString());
-			String cacheInstanceString;
-			if (lookup.isPresent()) {
-				cacheInstanceString = lookup.get();
-			} else {
-				cacheInstanceString = "";
+			String cacheInstanceString = hostAndPort.toString() + "-";
+
+			// Try getting cache size from kv-store
+			Optional<String> sizeLookup = consul.keyValueClient().getValueAsString(hostAndPort.toString());
+			if (sizeLookup.isPresent()) {
+				cacheInstanceString += sizeLookup.get();
 			}
 
 			newList.add(CacheInstance.fromString(cacheInstanceString));
