@@ -80,8 +80,7 @@ public class EDCClient {
 		Collection<CacheInstance> selectedDestinations = selector.select(replication);
 		for (CacheInstance selectedDestination : selectedDestinations) {
 			router.store(selectedDestination, new StoreRequest(key, value, ttl));
-			ret.add(selectedDestination.getHostAndPort().getHostText()
-					+ ":" + selectedDestination.getHostAndPort().getPort());
+			ret.add(selectedDestination.getHostAndPort().toString());
 		}
 
 		return ret;
