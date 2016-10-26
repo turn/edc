@@ -1,13 +1,19 @@
 
 # Docker setup for EDC
 
-## Overview
+## TL;DR
+Run `build-and-start.sh` to build all containers and start them.
+
+When you're done, run `stop-and-remove.sh` to stop all containers and clean them up.
+
+## Detailed setup
+
 In this directory are two docker containers that you will need to build and run to simulate a 1-node EDC cluster.
 
 - Consul server `/consul`
 - Redis instance with consul client `/redis`
 
-## Building
+### Building
 
 To build the images, run these docker build commands:
 
@@ -16,23 +22,23 @@ docker build -t edc-consul:test consul
 docker build -t edc-redis:test redis
 ```
 
-## Running
+### Running
 To run, the consul server container should be started up first, then the redis instance:
 
 ```
-docker run -it --name edc-consul edc-consul:test
+docker run -d --name edc-consul edc-consul:test
 ```
 
-To start the redis container you first have to get the IP of the consul server. 
+Next, run the redis instance, linking the consul server:
 
 ```
-docker inspect edc-consul | grep \"IPAddress\"
+docker run -d --link edc-consul --name edc-redis edc-redis:test
 ```
 
-This will then be provided to the redis container so that it can join the consul cluster.
+At this point you should have the Consul server running and the redis instance registered to Consul. You can check from the Consul UI by going to your browser and hitting `{CONSUL_SERVER_IP}:8500`.
+
+You can get the Consul IP address by using the docker `inspect` command: 
 
 ```
-docker run -it -e 'CONSUL_SERVER_ADDRESS={CONSUL_SERVER_IP}' --name edc-redis edc-redis:test
+docker inspect --format="{{ .NetworkSettings.IPAddress }}" edc-consul
 ```
-
-At this point you should have the Consul server running and the redis instance registered to Consul. You can check from the Consul UI by going to your browser and hitting `{CONSUL_SERVER_IP}:8500`
