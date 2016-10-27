@@ -18,6 +18,7 @@ import java.util.concurrent.TimeoutException;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
+import com.orbitz.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,7 +67,7 @@ public class RequestRouter extends DiscoveryListener {
 		Map<Integer, StorageConnection> newRoutingMap = Maps.newConcurrentMap();
 
 		for (CacheInstance instance : availableInstances) {
-			if (this.routingMap.containsKey(instance)) {
+			if (this.routingMap.containsKey(instance.hashCode())) {
 				newRoutingMap.put(instance.hashCode(), this.routingMap.get(instance.hashCode()));
 			} else {
 				StorageConnection newConnection;
@@ -79,6 +80,7 @@ public class RequestRouter extends DiscoveryListener {
 					newRoutingMap.put(instance.hashCode(), newConnection);
 				} catch (IOException ioe) {
 					logger.error("Cache instance {} found but connection was not able to be established", instance.toString());
+					logger.error(ExceptionUtils.getStackTrace(ioe));
 					// TODO: need to remove from selection scheme
 				}
 			}

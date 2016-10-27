@@ -21,14 +21,19 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.curator.x.discovery.ServiceCache;
 import org.apache.curator.x.discovery.ServiceDiscoveryBuilder;
 import org.apache.curator.x.discovery.ServiceInstance;
-import org.apache.curator.x.discovery.details.JsonInstanceSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Add class description
+ * Zookeeper-based service discovery connector
+ *
+ * Uses Curator API
  *
  * @author tshiou
  */
 public class CuratorServiceDiscovery extends DiscoveryListener implements ServiceDiscovery {
+
+	private static final Logger LOG = LoggerFactory.getLogger(CuratorServiceDiscovery.class);
 
 	private final CuratorFramework curator;
 
@@ -83,7 +88,7 @@ public class CuratorServiceDiscovery extends DiscoveryListener implements Servic
 			this.serviceDiscovery.close();
 			this.serviceCache.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+
 		}
 	}
 

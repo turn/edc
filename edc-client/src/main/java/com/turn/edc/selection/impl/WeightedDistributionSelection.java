@@ -3,10 +3,11 @@
  * Proprietary and confidential.
  */
 
-package com.turn.edc.selection;
+package com.turn.edc.selection.impl;
 
 import com.turn.edc.discovery.CacheInstance;
 import com.turn.edc.exception.InvalidParameterException;
+import com.turn.edc.selection.SelectionProvider;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -18,11 +19,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 /**
- * Add class description
+ * Selection provider that has a weighted (non-uniform) distribution according to
+ * {@link CacheInstance#cacheSize}
  *
  * @author tshiou
  */
-public class WeightedDistributionSelection {
+public class WeightedDistributionSelection implements SelectionProvider {
 
 	// Collection of query instances
 	private List<CacheInstance> instances = Lists.newArrayList();
@@ -122,6 +124,7 @@ public class WeightedDistributionSelection {
 		return selectAlias ? alias[column] : column;
 	}
 
+	@Override
 	public Collection<CacheInstance> selectInstances(int n) throws InvalidParameterException {
 
 		if (n <= this.instances.size()) {

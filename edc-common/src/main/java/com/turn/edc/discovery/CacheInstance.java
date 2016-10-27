@@ -49,8 +49,19 @@ public class CacheInstance {
 		if (str == null || str.isEmpty()) {
 			return NULL_CACHE_INSTANCE;
 		}
-		HostAndPort hap = HostAndPort.fromString(str.split("-")[0]);
-		int cacheSize = Integer.parseInt(str.split("-")[1]);
+
+		HostAndPort hap;
+		try {
+			hap = HostAndPort.fromString(str.split("-")[0]);
+		} catch (Exception e) {
+			return NULL_CACHE_INSTANCE;
+		}
+		int cacheSize;
+		try {
+			cacheSize = Integer.parseInt(str.split("-")[1]);
+		} catch (Exception ignore) {
+			cacheSize = 0;
+		}
 		return new CacheInstance(hap, cacheSize);
 	}
 
