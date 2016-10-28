@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Add class description
+ * Service discovery interface
  *
  * @author tshiou
  */

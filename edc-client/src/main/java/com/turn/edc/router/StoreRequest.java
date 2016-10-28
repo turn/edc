@@ -6,7 +6,7 @@
 package com.turn.edc.router;
 
 /**
- * Add class description
+ * An immutable object representing a cache store request
  *
  * @author tshiou
  */
