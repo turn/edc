@@ -19,7 +19,7 @@ import java.util.concurrent.TimeoutException;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
-import com.orbitz.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

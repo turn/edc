@@ -16,11 +16,11 @@ import java.util.List;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
-import com.orbitz.apache.commons.lang3.exception.ExceptionUtils;
 import com.orbitz.consul.Consul;
 import com.orbitz.consul.cache.ServiceHealthCache;
 import com.orbitz.consul.model.ConsulResponse;
 import com.orbitz.consul.model.health.ServiceHealth;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
