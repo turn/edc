@@ -92,7 +92,7 @@ public class RequestRouter extends DiscoveryListener {
 					newRoutingMap.put(instance.hashCode(), newConnection);
 				} catch (IOException ioe) {
 					logger.error("Cache instance {} found but connection was not able to be established", instance.toString());
-					logger.error(ExceptionUtils.getStackTrace(ioe));
+					logger.debug(ExceptionUtils.getStackTrace(ioe));
 					// TODO: need to remove from selection scheme
 				}
 			}
