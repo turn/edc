@@ -6,7 +6,7 @@
 package com.turn.edc.storage;
 
 /**
- * Add class description
+ * Supported storage types
  *
  * @author tshiou
  */

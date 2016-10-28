@@ -28,7 +28,24 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 
 /**
- * Add class description
+ * EDC client main class
+ *
+ * Create an instance of the EDC client by using the builder. During the build phase, the following
+ * is required to be configured:
+ * 1. storage layer
+ * 2. service discovery layer
+ * 3. service name
+ *
+ * For example:
+ *
+ * 	EDCClient client = EDCClient.builder()
+ *      .withRedisStorage()
+ *      .withConsulServiceDiscovery("localhost")
+ *      .withServiceName("redis")
+ *      .build();
+ *
+ * After building the client, initialize it by calling start(). This sets up the service discovery
+ * client and initializes the routing layer
  *
  * @author tshiou
  */
@@ -55,6 +72,7 @@ public class EDCClient {
 
 	public void close() {
 		this.discovery.shutdown();
+		this.router.close();
 	}
 
 	public byte[] get(HostAndPort hostAndPort, String key)
@@ -161,6 +179,10 @@ public class EDCClient {
 
 			public ConsulServiceDiscoveryBuilder withConsulServiceDiscovery(String consulURL) {
 				return new ConsulServiceDiscoveryBuilder(this.connectorFactory, consulURL);
+			}
+
+			public ConsulServiceDiscoveryBuilder withConsulServiceDiscovery() {
+				return withConsulServiceDiscovery("localhost");
 			}
 		}
 

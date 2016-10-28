@@ -55,7 +55,7 @@ public class JedisStorageConnector extends StorageConnector {
 		if (res == null) {
 			throw new KeyNotFoundException(key);
 		}
-		return Base64.decodeBase64(jedis.get(key));
+		return Base64.decodeBase64(res);
 	}
 
 	@Override

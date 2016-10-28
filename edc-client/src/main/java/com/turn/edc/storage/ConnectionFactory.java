@@ -12,11 +12,14 @@ import com.turn.edc.storage.impl.SpymemcachedStorageConnector;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
+import com.google.inject.Singleton;
+
 /**
- * Add class description
+ * {@link StorageConnection} factory
  *
  * @author tshiou
  */
+@Singleton
 public class ConnectionFactory {
 
 	private final StorageType storageType;

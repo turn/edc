@@ -27,7 +27,7 @@ public class CacheInstanceSelector extends DiscoveryListener {
 	private volatile SelectionProvider provider;
 
 	public CacheInstanceSelector() {
-		provider = new UniformDistributionSelection(Lists.<CacheInstance>newArrayList());
+		provider = new UniformDistributionSelection(Lists.newArrayList());
 	}
 
 	public Collection<CacheInstance> select(int n) throws InvalidParameterException {

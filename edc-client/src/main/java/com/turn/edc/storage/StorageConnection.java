@@ -14,7 +14,8 @@ import java.util.concurrent.TimeoutException;
 import com.google.common.eventbus.EventBus;
 
 /**
- * Add class description
+ * Object that represents a connection to a storage instance. Contains an eventbus that will handle
+ * store/get requests.
  *
  * @author tshiou
  */

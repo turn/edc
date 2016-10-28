@@ -6,7 +6,7 @@
 package com.turn.edc.exception;
 
 /**
- * Add class description
+ * Exception to represent if a key does not exist in the cache
  *
  * @author tshiou
  */

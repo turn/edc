@@ -12,6 +12,7 @@ import com.turn.edc.storage.StorageConnection;
 import com.turn.edc.storage.ConnectionFactory;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
@@ -60,6 +61,17 @@ public class RequestRouter extends DiscoveryListener {
 		connection.post(request);
 
 		return true;
+	}
+
+	/**
+	 * Closes all connections and clears the routing map
+	 */
+	public void close() {
+		for(Iterator<StorageConnection> it = routingMap.values().iterator(); it.hasNext(); ) {
+			StorageConnection conn = it.next();
+			conn.close();
+			it.remove();
+		}
 	}
 
 	@Override
