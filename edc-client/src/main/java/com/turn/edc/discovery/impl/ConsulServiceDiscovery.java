@@ -10,17 +10,16 @@ import com.turn.edc.discovery.DiscoveryListener;
 import com.turn.edc.discovery.ServiceDiscovery;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
+import com.orbitz.apache.commons.lang3.exception.ExceptionUtils;
 import com.orbitz.consul.Consul;
-import com.orbitz.consul.HealthClient;
 import com.orbitz.consul.cache.ServiceHealthCache;
-import com.orbitz.consul.cache.ServiceHealthKey;
+import com.orbitz.consul.model.ConsulResponse;
 import com.orbitz.consul.model.health.ServiceHealth;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,39 +35,45 @@ public class ConsulServiceDiscovery extends DiscoveryListener implements Service
 
 	private static final Logger LOG = LoggerFactory.getLogger(ConsulServiceDiscovery.class);
 
-	private static final int AWAIT_INITIALIZATION_SEC = 10;
+	private final String serviceName;
+	private final String consulURL;
+	private final int consulPort;
 
-	private final Consul consul;
-	private final ServiceHealthCache servicesCache;
-	private List<CacheInstance> liveInstances;
-	private List<DiscoveryListener> listeners = Lists.newArrayList();
+	private Consul consul;
+	private ServiceHealthCache servicesCache;
+	private List<CacheInstance> liveInstances = Lists.newArrayList();
+	private List<DiscoveryListener> listeners = Lists.newLinkedList();
 
-	public ConsulServiceDiscovery(String consulURL, String serviceName) {
-
-		this.consul = Consul.builder().build(); // connect to Consul on localhost
-		HealthClient healthClient = consul.healthClient();
-
-		this.servicesCache = ServiceHealthCache.newCache(healthClient, serviceName);
-
-		attachListeners(this);
+	public ConsulServiceDiscovery(String consulURL, int consulPort, String serviceName) {
+		this.serviceName = serviceName;
+		this.consulURL = consulURL;
+		this.consulPort = consulPort;
 	}
 
 	@Override
 	public void start() throws IOException {
-		try {
-			servicesCache.start();
-			servicesCache.awaitInitialized(AWAIT_INITIALIZATION_SEC, TimeUnit.SECONDS);
-		} catch (Exception e) {
-			throw new IOException(e);
-		}
-		initializeInstances(servicesCache);
+		this.consul = Consul.builder().withUrl(new URL("http", consulURL, consulPort, "")).build();
+		this.liveInstances = getLiveInstances(this.consul, this.serviceName);
 		for (DiscoveryListener listener : this.listeners) {
 			listener.update(this.liveInstances);
+		}
+
+		this.servicesCache = ServiceHealthCache.newCache(consul.healthClient(), serviceName);
+		this.servicesCache.addListener(new ConsulCacheListener(this.consul, this));
+		try {
+			this.servicesCache.start();
+		} catch (Exception e) {
+			throw new IOException(e);
 		}
 	}
 
 	@Override
 	public void shutdown() {
+		try {
+			servicesCache.stop();
+		} catch (Exception e) {
+			LOG.error("Failed to stop consul service cache: " + ExceptionUtils.getStackTrace(e));
+		}
 	}
 
 	public List<CacheInstance> getAvailableInstances() {
@@ -78,23 +83,29 @@ public class ConsulServiceDiscovery extends DiscoveryListener implements Service
 	@Override
 	public void attachListeners(DiscoveryListener... listeners) {
 		for (DiscoveryListener listener : listeners) {
-			this.servicesCache.addListener(new ConsulCacheListener(consul, listener));
 			this.listeners.add(listener);
+			listener.update(this.liveInstances);
 		}
 	}
 
 	@Override
 	public void update(List<CacheInstance> instances) {
 		this.liveInstances = instances;
+		for (DiscoveryListener listener : this.listeners) {
+			listener.update(this.liveInstances);
+		}
 	}
 
-	private void initializeInstances(ServiceHealthCache initializedCache) {
-		List<CacheInstance> newList = Lists.newArrayList();
 
-		Map<ServiceHealthKey, ServiceHealth> instances = initializedCache.getMap();
-		for (ServiceHealthKey serviceKey : instances.keySet()) {
+	private List<CacheInstance> getLiveInstances(Consul consul, String serviceName) {
+		List<CacheInstance> newList = Lists.newArrayList();
+		ConsulResponse<List<ServiceHealth>> consulRequest =
+				consul.healthClient().getAllServiceInstances(serviceName);
+
+		for (ServiceHealth instance : consulRequest.getResponse()) {
 			// Get cache instance host/port from consul health key
-			HostAndPort hostAndPort = HostAndPort.fromParts(serviceKey.getHost(), serviceKey.getPort());
+			HostAndPort hostAndPort = HostAndPort.fromParts(
+					instance.getNode().getAddress(), instance.getService().getPort());
 			String cacheInstanceString = hostAndPort.toString() + "-";
 
 			// Try getting cache size from kv-store
@@ -106,6 +117,7 @@ public class ConsulServiceDiscovery extends DiscoveryListener implements Service
 			newList.add(CacheInstance.fromString(cacheInstanceString));
 		}
 
-		update(newList);
+		return newList;
 	}
+
 }
