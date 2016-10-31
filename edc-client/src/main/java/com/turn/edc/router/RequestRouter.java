@@ -45,7 +45,8 @@ public class RequestRouter extends DiscoveryListener {
 	public RequestRouter() {
 	}
 
-	public byte[] get(CacheInstance source, String key) throws KeyNotFoundException, TimeoutException, IOException {
+	public byte[] get(CacheInstance source, String key)
+			throws KeyNotFoundException, TimeoutException, IOException {
 		StorageConnection connection = routingMap.get(source.hashCode());
 
 		if (connection == null) {
@@ -81,6 +82,7 @@ public class RequestRouter extends DiscoveryListener {
 
 	@Override
 	public void update(List<CacheInstance> availableInstances) {
+		logger.debug("Updating routing layer with {} instances", availableInstances.size());
 		Map<Integer, StorageConnection> newRoutingMap = Maps.newConcurrentMap();
 
 		List<CacheInstance> unestablishedConnections = Lists.newArrayList();
@@ -109,11 +111,14 @@ public class RequestRouter extends DiscoveryListener {
 			}
 		}
 
+		// Update the selection layer with the broken connections removed
 		if (foundBrokenConnection) {
+			logger.debug("Removing {} unestablished connections from the selection layer",
+					unestablishedConnections.size());
+
 			// Remove unestablishable connections from the list of available instances
 			availableInstances.removeAll(unestablishedConnections);
 
-			// Update the selection layer with the broken connections removed
 			this.selectionLayer.update(availableInstances);
 		}
 
@@ -122,11 +127,13 @@ public class RequestRouter extends DiscoveryListener {
 
 		// Update current map reference
 		this.routingMap = newRoutingMap;
+		logger.info("New routing map updated with size {}", newRoutingMap.size());
 
 		// Remove live connections from the old map
 		newRoutingMap.keySet().forEach(oldReference::remove);
 
 		// Close all remaining (presumed dead) connections in the old connection map
+		logger.debug("Closing {} old connections", oldReference.size());
 		oldReference.values().forEach(StorageConnection::close);
 	}
 

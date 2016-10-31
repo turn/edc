@@ -126,13 +126,14 @@ public class WeightedDistributionSelection implements SelectionProvider {
 
 	@Override
 	public Collection<CacheInstance> selectInstances(int n) throws InvalidParameterException {
-
+		// TODO: randomize the n<size case
 		if (n <= this.instances.size()) {
 			return this.instances;
 		}
 
 		Set<CacheInstance> selections = Sets.newHashSetWithExpectedSize(n);
 
+		// TODO: use java8's distinct/limit random function
 		for (int i = 0 ; i < n ; i++) {
 			CacheInstance selected = this.instances.get(selectIndex());
 			while (!selections.contains(selected)) {
