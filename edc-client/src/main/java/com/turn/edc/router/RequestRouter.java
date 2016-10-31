@@ -8,6 +8,7 @@ package com.turn.edc.router;
 import com.turn.edc.exception.KeyNotFoundException;
 import com.turn.edc.discovery.CacheInstance;
 import com.turn.edc.discovery.DiscoveryListener;
+import com.turn.edc.selection.CacheInstanceSelector;
 import com.turn.edc.storage.StorageConnection;
 import com.turn.edc.storage.ConnectionFactory;
 
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -33,6 +35,9 @@ public class RequestRouter extends DiscoveryListener {
 
 	@Inject
 	private ConnectionFactory connectorFactory;
+
+	@Inject
+	private CacheInstanceSelector selectionLayer;
 
 	private volatile Map<Integer, StorageConnection> routingMap = Maps.newConcurrentMap();
 	private final static int TIMEOUT = 10;
@@ -78,10 +83,15 @@ public class RequestRouter extends DiscoveryListener {
 	public void update(List<CacheInstance> availableInstances) {
 		Map<Integer, StorageConnection> newRoutingMap = Maps.newConcurrentMap();
 
+		List<CacheInstance> unestablishedConnections = Lists.newArrayList();
+		boolean foundBrokenConnection = false;
+		// Update connection map with new list of available instances
 		for (CacheInstance instance : availableInstances) {
+			// If the connection already exists, reuse old connection
 			if (this.routingMap.containsKey(instance.hashCode())) {
 				newRoutingMap.put(instance.hashCode(), this.routingMap.get(instance.hashCode()));
 			} else {
+				// else create a new connection
 				StorageConnection newConnection;
 				try {
 					newConnection = connectorFactory.create(
@@ -93,18 +103,31 @@ public class RequestRouter extends DiscoveryListener {
 				} catch (IOException ioe) {
 					logger.error("Cache instance {} found but connection was not able to be established", instance.toString());
 					logger.debug(ExceptionUtils.getStackTrace(ioe));
-					// TODO: need to remove from selection scheme
+					unestablishedConnections.add(instance);
+					foundBrokenConnection = true;
 				}
 			}
 		}
 
-		Map<Integer, StorageConnection> tempReference = this.routingMap;
+		if (foundBrokenConnection) {
+			// Remove unestablishable connections from the list of available instances
+			availableInstances.removeAll(unestablishedConnections);
 
+			// Update the selection layer with the broken connections removed
+			this.selectionLayer.update(availableInstances);
+		}
+
+		// Hold on to old map for GC
+		Map<Integer, StorageConnection> oldReference = this.routingMap;
+
+		// Update current map reference
 		this.routingMap = newRoutingMap;
 
-		for (StorageConnection conn : tempReference.values()) {
-			conn.close();
-		}
+		// Remove live connections from the old map
+		newRoutingMap.keySet().forEach(oldReference::remove);
+
+		// Close all remaining (presumed dead) connections in the old connection map
+		oldReference.values().forEach(StorageConnection::close);
 	}
 
 }
