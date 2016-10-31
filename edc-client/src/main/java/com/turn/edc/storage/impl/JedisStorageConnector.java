@@ -13,6 +13,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.codec.binary.Base64;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Pipeline;
 
 /**
  * ConnectionFactory connector to Redis using Jedis library
@@ -21,6 +22,8 @@ import redis.clients.jedis.Jedis;
  * @author tshiou
  */
 public class JedisStorageConnector extends StorageConnector {
+
+	private static final String DEFAULT_SUBKEY = "_SINGLEFIELD";
 
 	private final Jedis jedis;
 
@@ -36,9 +39,21 @@ public class JedisStorageConnector extends StorageConnector {
 	}
 
 	@Override
-	public void store(String key, byte[] value, int ttl, int timeout) throws IOException {
+	public void set(String key, byte[] value, int ttl, int timeout) throws IOException {
+		set(key, DEFAULT_SUBKEY, value, ttl, timeout);
+	}
+
+	@Override
+	public void set(String key, String subkey, byte[] value, int ttl, int timeout) throws IOException {
+		if (subkey == null || subkey.isEmpty()) {
+			subkey = DEFAULT_SUBKEY;
+		}
+
 		try {
-			jedis.setex(key, ttl, Base64.encodeBase64String(value));
+			Pipeline p = jedis.pipelined();
+			p.hset(key, subkey, Base64.encodeBase64String(value));
+			p.expire(key, ttl);
+			p.sync();
 		} catch (Exception e) {
 			throw new IOException(e.getCause());
 		}
@@ -46,14 +61,23 @@ public class JedisStorageConnector extends StorageConnector {
 
 	@Override
 	public byte[] get(String key, int timeout) throws KeyNotFoundException, TimeoutException, IOException {
+		return get(key, DEFAULT_SUBKEY, timeout);
+	}
+
+	@Override
+	public byte[] get(String key, String subkey, int timeout) throws KeyNotFoundException, TimeoutException, IOException {
+		if (subkey == null || subkey.isEmpty()) {
+			subkey = DEFAULT_SUBKEY;
+		}
+
 		String res;
 		try {
-			res = jedis.get(key);
+			res = jedis.hget(key, subkey);
 		} catch (Exception e) {
 			throw new IOException(e.getCause());
 		}
 		if (res == null) {
-			throw new KeyNotFoundException(key);
+			throw new KeyNotFoundException(key + ":" + subkey);
 		}
 		return Base64.decodeBase64(res);
 	}

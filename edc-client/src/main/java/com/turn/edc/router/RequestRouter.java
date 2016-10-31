@@ -45,7 +45,7 @@ public class RequestRouter extends DiscoveryListener {
 	public RequestRouter() {
 	}
 
-	public byte[] get(CacheInstance source, String key)
+	public byte[] get(CacheInstance source, String key, String subkey)
 			throws KeyNotFoundException, TimeoutException, IOException {
 		StorageConnection connection = routingMap.get(source.hashCode());
 
@@ -53,7 +53,7 @@ public class RequestRouter extends DiscoveryListener {
 			throw new IOException("Data source not registered!");
 		}
 
-		return connection.get(key, TIMEOUT);
+		return connection.get(key, subkey, TIMEOUT);
 	}
 
 	public boolean store(CacheInstance destination, StoreRequest request) {

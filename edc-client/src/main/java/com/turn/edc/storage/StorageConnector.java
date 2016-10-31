@@ -24,16 +24,20 @@ import org.slf4j.LoggerFactory;
 public abstract class StorageConnector {
 	private static final Logger LOG = LoggerFactory.getLogger(StorageConnector.class);
 
-	public abstract void store(String key, byte[] value, int ttl, int timeout) throws IOException;
+	public abstract void set(String key, byte[] value, int ttl, int timeout) throws IOException;
+
+	public abstract void set(String key, String subkey, byte[] value, int ttl, int timeout) throws IOException;
 
 	public abstract byte[] get(String key, int timeout) throws KeyNotFoundException, TimeoutException, IOException;
+
+	public abstract byte[] get(String key, String subkey, int timeout) throws KeyNotFoundException, TimeoutException, IOException;
 
 	public abstract void close();
 
 	@Subscribe
 	public void handleStoreRequest(StoreRequest request) {
 		try {
-			this.store(request.getKey(), request.getPayload(), request.getTtl(), 10);
+			this.set(request.getKey(), request.getSubkey(), request.getPayload(), request.getTtl(), 10);
 		} catch (IOException e) {
 			LOG.error("Store request failed");
 			LOG.debug(ExceptionUtils.getStackTrace(e));

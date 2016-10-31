@@ -75,7 +75,7 @@ public class EDCClient {
 		this.router.close();
 	}
 
-	public byte[] get(HostAndPort hostAndPort, String key)
+	public byte[] get(HostAndPort hostAndPort, String key, String subkey)
 			throws IOException, TimeoutException, KeyNotFoundException, InvalidParameterException {
 		if (hostAndPort.getHostText() == null || hostAndPort.getHostText().isEmpty()) {
 			throw new InvalidParameterException("hostAndPort", hostAndPort.toString(), "Host cannot be empty");
@@ -85,10 +85,11 @@ public class EDCClient {
 			throw new InvalidParameterException("hostAndPort", hostAndPort.toString(), "Port cannot be empty");
 		}
 
-		return router.get(new CacheInstance(hostAndPort, -1), key);
+		return router.get(new CacheInstance(hostAndPort, -1), key, subkey);
 	}
 
-	public Collection<String> put(int replication, String key, byte[] value, int ttl) throws InvalidParameterException {
+	public Collection<String> set(int replication, String key, String subkey, byte[] value, int ttl)
+			throws InvalidParameterException {
 		if (replication < 1) {
 			throw new InvalidParameterException("replication", Integer.toString(replication),
 					"Value should be greater than 0");
@@ -97,11 +98,20 @@ public class EDCClient {
 		List<String> ret = Lists.newArrayListWithCapacity(replication);
 		Collection<CacheInstance> selectedDestinations = selector.select(replication);
 		for (CacheInstance selectedDestination : selectedDestinations) {
-			router.store(selectedDestination, new StoreRequest(key, value, ttl));
+			router.store(selectedDestination, new StoreRequest(key, subkey, value, ttl));
 			ret.add(selectedDestination.getHostAndPort().toString());
 		}
 
 		return ret;
+	}
+
+	public void set(HostAndPort destination, String key, String subkey, byte[] value, int ttl)
+			throws InvalidParameterException, IOException {
+		router.store(new CacheInstance(destination), new StoreRequest(key, subkey, value, ttl));
+	}
+
+	public Collection<String> set(int replication, String key, byte[] value, int ttl) throws InvalidParameterException {
+		return set(replication, key, "", value, ttl);
 	}
 
 	/**

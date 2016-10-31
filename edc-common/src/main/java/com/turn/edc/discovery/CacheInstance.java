@@ -31,6 +31,10 @@ public class CacheInstance {
 	public static final CacheInstance NULL_CACHE_INSTANCE = new CacheInstance(
 			HostAndPort.fromParts("", 0), -1);
 
+	public CacheInstance(HostAndPort hostAndPort) {
+		this(hostAndPort, 0);
+	}
+
 	public CacheInstance(HostAndPort hostAndPort, int cacheSize) {
 		this.hostAndPort = hostAndPort;
 		this.cacheSize = cacheSize;
