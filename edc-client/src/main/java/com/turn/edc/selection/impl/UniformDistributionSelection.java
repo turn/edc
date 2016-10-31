@@ -7,7 +7,6 @@ import com.turn.edc.selection.SelectionProvider;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 
 import com.google.common.collect.Lists;
 
@@ -19,7 +18,6 @@ import com.google.common.collect.Lists;
 public class UniformDistributionSelection implements SelectionProvider {
 	private final List<CacheInstance> instances;
 	private final int nInstances;
-	private final ThreadLocalRandom random = ThreadLocalRandom.current();
 
 	public UniformDistributionSelection(List<CacheInstance> serviceInstances) {
 		this.instances = serviceInstances;

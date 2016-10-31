@@ -15,7 +15,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
 import com.orbitz.consul.Consul;
-import com.orbitz.consul.KeyValueClient;
 import com.orbitz.consul.cache.ConsulCache;
 import com.orbitz.consul.cache.ServiceHealthKey;
 import com.orbitz.consul.model.health.ServiceHealth;
@@ -51,9 +50,10 @@ public class ConsulCacheListener implements ConsulCache.Listener<ServiceHealthKe
 		LOG.debug("Service change notification received");
 		List<CacheInstance> newList = Lists.newArrayList();
 
-		for (ServiceHealthKey serviceKey : newValues.keySet()) {
+		for (ServiceHealth instance : newValues.values()) {
 			// Get cache instance host/port from consul health key
-			HostAndPort hostAndPort = HostAndPort.fromParts(serviceKey.getHost(), serviceKey.getPort());
+			HostAndPort hostAndPort = HostAndPort.fromParts(
+					instance.getNode().getAddress(), instance.getService().getPort());
 			String cacheInstanceString = hostAndPort.toString() + "-";
 
 			// Try getting cache size from kv-store

@@ -11,7 +11,6 @@ import com.turn.edc.discovery.DiscoveryListener;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.orbitz.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.x.discovery.ServiceCache;

@@ -8,12 +8,12 @@ package com.turn.edc.discovery;
 import java.util.List;
 
 /**
- * Add class description
+ * Interface representing a listener on available service instances
  *
  * @author tshiou
  */
 public abstract class DiscoveryListener {
 	public void update(List<CacheInstance> availableInstances) {
-		// no-op
+		// default no-op
 	}
 }

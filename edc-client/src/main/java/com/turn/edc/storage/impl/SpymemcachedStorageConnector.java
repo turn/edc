@@ -25,7 +25,7 @@ public class SpymemcachedStorageConnector extends StorageConnector {
 	private final MemcachedClient client;
 
 	public SpymemcachedStorageConnector(String host, String port, int timeout) throws IOException {
-		this.client = new MemcachedClient(new InetSocketAddress(host, 11211));
+		this.client = new MemcachedClient(new InetSocketAddress(host, Integer.parseInt(port)));
 		// TODO: Sanity check host and port
 	}
 

@@ -6,7 +6,7 @@
 package com.turn.edc.exception;
 
 /**
- * Add class description
+ * Exception representing an invalid parameter
  *
  * @author tshiou
  */

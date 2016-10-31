@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.imps.CuratorFrameworkState;
@@ -85,10 +86,15 @@ public class CuratorServiceDiscovery extends DiscoveryListener implements Servic
 	@Override
 	public void shutdown() {
 		try {
-			this.serviceDiscovery.close();
 			this.serviceCache.close();
 		} catch (IOException e) {
+			LOG.error("Failed to close service discovery cache: " + ExceptionUtils.getStackTrace(e));
+		}
 
+		try {
+			this.serviceDiscovery.close();
+		} catch (IOException e) {
+			LOG.error("Failed to close service discovery: " + ExceptionUtils.getStackTrace(e));
 		}
 	}
 

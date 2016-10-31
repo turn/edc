@@ -28,7 +28,24 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 
 /**
- * Add class description
+ * EDC client main class
+ *
+ * Create an instance of the EDC client by using the builder. During the build phase, the following
+ * is required to be configured:
+ * 1. storage layer
+ * 2. service discovery layer
+ * 3. service name
+ *
+ * For example:
+ *
+ * 	EDCClient client = EDCClient.builder()
+ *      .withRedisStorage()
+ *      .withConsulServiceDiscovery("localhost")
+ *      .withServiceName("redis")
+ *      .build();
+ *
+ * After building the client, initialize it by calling start(). This sets up the service discovery
+ * client and initializes the routing layer
  *
  * @author tshiou
  */
@@ -55,6 +72,7 @@ public class EDCClient {
 
 	public void close() {
 		this.discovery.shutdown();
+		this.router.close();
 	}
 
 	public byte[] get(HostAndPort hostAndPort, String key)
@@ -130,12 +148,12 @@ public class EDCClient {
 
 			EDCStorageBuilder() {}
 
-			public EDCServiceDiscoveryBuilder withRedisStorage() {
+			public EDCServiceDiscoveryBuilder usingRedisStorage() {
 				return new EDCServiceDiscoveryBuilder(
 						new ConnectionFactory(StorageType.REDIS)	);
 			}
 
-			public EDCServiceDiscoveryBuilder withMemcachedStorage() {
+			public EDCServiceDiscoveryBuilder usingMemcachedStorage() {
 				return new EDCServiceDiscoveryBuilder(
 						new ConnectionFactory(StorageType.MEMCACHED));
 			}
@@ -155,12 +173,16 @@ public class EDCClient {
 				this.connectorFactory = connectorFactory;
 			}
 
-			public ZkServiceDiscoveryBuilder withZkServiceDiscovery(String zkConnectionString) {
+			public ZkServiceDiscoveryBuilder usingZkServiceDiscovery(String zkConnectionString) {
 				return new ZkServiceDiscoveryBuilder(this.connectorFactory, zkConnectionString);
 			}
 
-			public ConsulServiceDiscoveryBuilder withConsulServiceDiscovery(String consulURL) {
+			public ConsulServiceDiscoveryBuilder usingConsulServiceDiscovery(String consulURL) {
 				return new ConsulServiceDiscoveryBuilder(this.connectorFactory, consulURL);
+			}
+
+			public ConsulServiceDiscoveryBuilder usingConsulServiceDiscovery() {
+				return usingConsulServiceDiscovery("localhost");
 			}
 		}
 
@@ -197,6 +219,7 @@ public class EDCClient {
 		public static class ConsulServiceDiscoveryBuilder {
 			private final ConnectionFactory connectorFactory;
 			private final String consulURL;
+			private int consulPort = 8500;
 
 			ConsulServiceDiscoveryBuilder(
 					ConnectionFactory connectorFactory,
@@ -206,10 +229,15 @@ public class EDCClient {
 				this.consulURL = consulURL;
 			}
 
-			public EDCClient.Builder withServiceName(String serviceName) {
+			public ConsulServiceDiscoveryBuilder withConsulClientPort(int port) {
+				this.consulPort = port;
+				return this;
+			}
+
+			public EDCClient.Builder forServiceName(String serviceName) {
 				return new EDCClient.Builder(
 						this.connectorFactory,
-						new ConsulServiceDiscovery(this.consulURL, serviceName)
+						new ConsulServiceDiscovery(this.consulURL, this.consulPort, serviceName)
 				);
 			}
 		}

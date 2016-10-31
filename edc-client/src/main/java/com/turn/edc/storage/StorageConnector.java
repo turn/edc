@@ -12,6 +12,9 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 import com.google.common.eventbus.Subscribe;
+import com.orbitz.apache.commons.lang3.exception.ExceptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * ConnectionFactory layer connector interface
@@ -19,6 +22,7 @@ import com.google.common.eventbus.Subscribe;
  * @author tshiou
  */
 public abstract class StorageConnector {
+	private static final Logger LOG = LoggerFactory.getLogger(StorageConnector.class);
 
 	public abstract void store(String key, byte[] value, int ttl, int timeout) throws IOException;
 
@@ -31,7 +35,8 @@ public abstract class StorageConnector {
 		try {
 			this.store(request.getKey(), request.getPayload(), request.getTtl(), 10);
 		} catch (IOException e) {
-			e.printStackTrace();
+			LOG.error("Store request failed");
+			LOG.debug(ExceptionUtils.getStackTrace(e));
 		}
 	}
 }
