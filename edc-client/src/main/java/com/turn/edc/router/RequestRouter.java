@@ -127,7 +127,7 @@ public class RequestRouter extends DiscoveryListener {
 
 		// Update current map reference
 		this.routingMap = newRoutingMap;
-		logger.info("New routing map updated with size {}", newRoutingMap.size());
+		logger.debug("New routing map updated with size {}", newRoutingMap.size());
 
 		// Remove live connections from the old map
 		newRoutingMap.keySet().forEach(oldReference::remove);
