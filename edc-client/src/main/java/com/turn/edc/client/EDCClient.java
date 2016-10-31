@@ -26,6 +26,9 @@ import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * EDC client main class
@@ -50,6 +53,7 @@ import com.google.inject.Inject;
  * @author tshiou
  */
 public class EDCClient {
+	private static final Logger logger = LoggerFactory.getLogger(EDCClient.class);
 
 	@Inject
 	private RequestRouter router;
@@ -67,27 +71,66 @@ public class EDCClient {
 	}
 
 	public void start() throws Exception {
+		logger.info("Starting EDC client...");
 		this.discovery.start();
 	}
 
 	public void close() {
+		logger.info("Shutting down EDC...");
 		this.discovery.shutdown();
 		this.router.close();
 	}
 
+	/**
+	 * Retrieves the value at key:subkey in the provided destination cache
+	 *
+	 * @param hostAndPort Destination host and port
+	 * @param key Top-level key
+	 * @param subkey Subkey, can be empty or null
+	 *
+	 * @return Value in bytes
+	 * @throws IOException Connection error with destination cache
+	 * @throws TimeoutException Retrieval timeout
+	 * @throws KeyNotFoundException Key (or subkey) was not found at the provided destination
+	 * @throws InvalidParameterException If an invalid destination is provided
+	 */
 	public byte[] get(HostAndPort hostAndPort, String key, String subkey)
 			throws IOException, TimeoutException, KeyNotFoundException, InvalidParameterException {
-		if (hostAndPort.getHostText() == null || hostAndPort.getHostText().isEmpty()) {
-			throw new InvalidParameterException("hostAndPort", hostAndPort.toString(), "Host cannot be empty");
-		}
-
-		if (hostAndPort.getPort() == -1) {
-			throw new InvalidParameterException("hostAndPort", hostAndPort.toString(), "Port cannot be empty");
-		}
+		checkHostAndPort(hostAndPort);
 
 		return router.get(new CacheInstance(hostAndPort, -1), key, subkey);
 	}
 
+	/**
+	 * Set the value at key with a given replication
+	 *
+	 * @param replication Desired number of cache instances to store the key
+	 * @param key Key
+	 * @param value Value
+	 * @param ttl TTL (in seconds) for key
+	 *
+	 * @return Collection of strings representing the selected destinations where the key:value
+	 * was stored
+	 * @throws InvalidParameterException If replication is less than 1 or no cache instances were found
+	 */
+	public Collection<String> set(int replication, String key, byte[] value, int ttl)
+			throws InvalidParameterException {
+		return set(replication, key, "", value, ttl);
+	}
+
+	/**
+	 * Set the value at key with a given replication
+	 *
+	 * @param replication Desired number of cache instances to store the key
+	 * @param key Top-level key
+	 * @param subkey Subkey
+	 * @param value Value
+	 * @param ttl TTL (in seconds) for key
+	 *
+	 * @return Collection of strings representing the selected destinations where the key:value
+	 * was stored
+	 * @throws InvalidParameterException If replication is less than 1 or no cache instances were found
+	 */
 	public Collection<String> set(int replication, String key, String subkey, byte[] value, int ttl)
 			throws InvalidParameterException {
 		if (replication < 1) {
@@ -96,7 +139,13 @@ public class EDCClient {
 		}
 
 		List<String> ret = Lists.newArrayListWithCapacity(replication);
-		Collection<CacheInstance> selectedDestinations = selector.select(replication);
+		Collection<CacheInstance> selectedDestinations;
+		try {
+			selectedDestinations = selector.select(replication);
+		} catch (InvalidParameterException ipe) {
+			logger.debug(ExceptionUtils.getMessage(ipe));
+			return ret;
+		}
 		for (CacheInstance selectedDestination : selectedDestinations) {
 			router.store(selectedDestination, new StoreRequest(key, subkey, value, ttl));
 			ret.add(selectedDestination.getHostAndPort().toString());
@@ -105,13 +154,36 @@ public class EDCClient {
 		return ret;
 	}
 
+	/**
+	 * Set the value at key in the provided destination
+	 *
+	 * @param destination Destination host and port
+	 * @param key Top-level key
+	 * @param subkey Subkey, can be empty or null
+	 * @param value Value to store
+	 * @param ttl TTL (in seconds) for the top-level key
+	 *
+	 * @throws InvalidParameterException If an invalid destination is provided
+	 */
 	public void set(HostAndPort destination, String key, String subkey, byte[] value, int ttl)
-			throws InvalidParameterException, IOException {
+			throws InvalidParameterException {
+		checkHostAndPort(destination);
+
 		router.store(new CacheInstance(destination), new StoreRequest(key, subkey, value, ttl));
 	}
 
-	public Collection<String> set(int replication, String key, byte[] value, int ttl) throws InvalidParameterException {
-		return set(replication, key, "", value, ttl);
+	/**
+	 * Checks if the hostAndPort is valid (host is not empty, and port is > 0)
+	 * @throws InvalidParameterException
+	 */
+	private void checkHostAndPort(HostAndPort hostAndPort) throws InvalidParameterException {
+		if (hostAndPort.getHostText() == null || hostAndPort.getHostText().isEmpty()) {
+			throw new InvalidParameterException("hostAndPort", hostAndPort.toString(), "Host cannot be empty");
+		}
+
+		if (hostAndPort.getPort() < 0) {
+			throw new InvalidParameterException("hostAndPort", hostAndPort.toString(), "Invalid port");
+		}
 	}
 
 	/**
@@ -187,12 +259,8 @@ public class EDCClient {
 				return new ZkServiceDiscoveryBuilder(this.connectorFactory, zkConnectionString);
 			}
 
-			public ConsulServiceDiscoveryBuilder usingConsulServiceDiscovery(String consulURL) {
-				return new ConsulServiceDiscoveryBuilder(this.connectorFactory, consulURL);
-			}
-
 			public ConsulServiceDiscoveryBuilder usingConsulServiceDiscovery() {
-				return usingConsulServiceDiscovery("localhost");
+				return new ConsulServiceDiscoveryBuilder(this.connectorFactory);
 			}
 		}
 
@@ -228,15 +296,18 @@ public class EDCClient {
 		 */
 		public static class ConsulServiceDiscoveryBuilder {
 			private final ConnectionFactory connectorFactory;
-			private final String consulURL;
+			private String consulURL = "localhost";
 			private int consulPort = 8500;
 
 			ConsulServiceDiscoveryBuilder(
-					ConnectionFactory connectorFactory,
-					String consulURL
+					ConnectionFactory connectorFactory
 			) {
 				this.connectorFactory = connectorFactory;
+			}
+
+			public ConsulServiceDiscoveryBuilder withConsulClientURL(String consulURL) {
 				this.consulURL = consulURL;
+				return this;
 			}
 
 			public ConsulServiceDiscoveryBuilder withConsulClientPort(int port) {
