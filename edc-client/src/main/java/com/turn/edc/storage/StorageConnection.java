@@ -31,8 +31,10 @@ public class StorageConnection {
 		this.storeRequestBus.register(connector);
 	}
 
-	public byte[] get(String key, int timeout) throws IOException, TimeoutException, KeyNotFoundException {
-		return this.connector.get(key, timeout);
+	public byte[] get(String key, String subkey, int timeout) throws IOException, TimeoutException, KeyNotFoundException {
+		return subkey == null || subkey.isEmpty()
+				? this.connector.get(key, timeout)
+				: this.connector.get(key, subkey, timeout);
 	}
 
 	public void post(StoreRequest request) {

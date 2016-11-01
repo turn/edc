@@ -125,6 +125,11 @@ public class WeightedDistributionSelection implements SelectionProvider {
 	}
 
 	@Override
+	public Collection<CacheInstance> allInstances() {
+		return this.instances;
+	}
+
+	@Override
 	public Collection<CacheInstance> selectInstances(int n) throws InvalidParameterException {
 		// TODO: randomize the n<size case
 		if (n <= this.instances.size()) {

@@ -12,17 +12,23 @@ package com.turn.edc.router;
  */
 public class StoreRequest {
 	private final String key;
+	private final String subkey;
 	private final byte[] payload;
 	private final int ttl;
 
-	public StoreRequest(String key, byte[] payload, int ttl) {
+	public StoreRequest(String key, String subkey, byte[] payload, int ttl) {
 		this.key = key;
+		this.subkey = subkey;
 		this.payload = payload;
 		this.ttl = ttl;
 	}
 
 	public String getKey() {
 		return this.key;
+	}
+
+	public String getSubkey() {
+		return this.subkey;
 	}
 
 	public byte[] getPayload() {

@@ -11,5 +11,7 @@ import java.util.Collection;
  * @author tshiou
  */
 public interface SelectionProvider {
+	Collection<CacheInstance> allInstances();
+
 	Collection<CacheInstance> selectInstances(int n) throws InvalidParameterException;
 }

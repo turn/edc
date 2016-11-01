@@ -31,9 +31,15 @@ public class SpymemcachedStorageConnector extends StorageConnector {
 
 
 	@Override
-	public void store(String key, byte[] value, int ttl, int timeout) throws IOException {
+	public void set(String key, byte[] value, int ttl, int timeout) throws IOException {
+		set(key, "", value, ttl, timeout);
+	}
+
+	// not supported
+	@Override
+	public void set(String key, String subkey, byte[] value, int ttl, int timeout) throws IOException {
 		try {
-			if (client.set(key, ttl, value).get() == false) {
+			if (client.set(key + ":" + subkey, ttl, value).get() == false) {
 				throw new IOException("Load failed");
 			}
 		} catch (InterruptedException | ExecutionException e) {
@@ -41,9 +47,15 @@ public class SpymemcachedStorageConnector extends StorageConnector {
 		}
 	}
 
+	// not supported
 	@Override
 	public byte[] get(String key, int timeout) throws KeyNotFoundException, TimeoutException, IOException {
-		return (byte[]) client.get(key);
+		return get(key, "", timeout);
+	}
+
+	@Override
+	public byte[] get(String key, String subkey, int timeout) throws KeyNotFoundException, TimeoutException, IOException {
+		return (byte[]) client.get(key + ":" + subkey);
 	}
 
 	@Override
