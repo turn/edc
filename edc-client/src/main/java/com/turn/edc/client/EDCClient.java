@@ -145,11 +145,10 @@ public class EDCClient {
 	 * @param value Value
 	 * @param ttl TTL (in seconds) for key
 	 *
-	 * @return Collection of strings representing the selected destinations where the key:value
-	 * was stored
+	 * @return Collection of host/port of the selected cache instances
 	 * @throws InvalidParameterException If replication is less than 1 or no cache instances were found
 	 */
-	public Collection<String> set(int replication, String key, byte[] value, int ttl)
+	public Collection<HostAndPort> set(int replication, String key, byte[] value, int ttl)
 			throws InvalidParameterException {
 		return set(replication, key, "", value, ttl);
 	}
@@ -163,18 +162,17 @@ public class EDCClient {
 	 * @param value Value
 	 * @param ttl TTL (in seconds) for key
 	 *
-	 * @return Collection of strings representing the selected destinations where the key:value
-	 * was stored
+	 * @return Collection of host/port of the selected cache instances
 	 * @throws InvalidParameterException If replication is less than 1 or no cache instances were found
 	 */
-	public Collection<String> set(int replication, String key, String subkey, byte[] value, int ttl)
+	public Collection<HostAndPort> set(int replication, String key, String subkey, byte[] value, int ttl)
 			throws InvalidParameterException {
 		if (replication < 1) {
 			throw new InvalidParameterException("replication", Integer.toString(replication),
 					"Value should be greater than 0");
 		}
 
-		List<String> ret = Lists.newArrayListWithCapacity(replication);
+		List<HostAndPort> ret = Lists.newArrayListWithCapacity(replication);
 		Collection<CacheInstance> selectedDestinations;
 		try {
 			selectedDestinations = selector.select(replication);
@@ -184,7 +182,7 @@ public class EDCClient {
 		}
 		for (CacheInstance selectedDestination : selectedDestinations) {
 			router.store(selectedDestination, new StoreRequest(key, subkey, value, ttl));
-			ret.add(selectedDestination.getHostAndPort().toString());
+			ret.add(selectedDestination.getHostAndPort());
 		}
 
 		return ret;
