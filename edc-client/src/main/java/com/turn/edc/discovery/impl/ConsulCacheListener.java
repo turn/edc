@@ -14,10 +14,11 @@ import java.util.Map;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
-import com.orbitz.consul.Consul;
 import com.orbitz.consul.cache.ConsulCache;
+import com.orbitz.consul.cache.KVCache;
 import com.orbitz.consul.cache.ServiceHealthKey;
 import com.orbitz.consul.model.health.ServiceHealth;
+import com.orbitz.consul.model.kv.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,12 +33,12 @@ public class ConsulCacheListener implements ConsulCache.Listener<ServiceHealthKe
 
 	private static final Logger LOG = LoggerFactory.getLogger(ConsulCacheListener.class);
 
-	private final Consul consul;
+	private final KVCache kvCache;
 	private final DiscoveryListener listener;
 	// TODO: We can make this GC free by keeping the old reference and swapping
 
-	public ConsulCacheListener(Consul consul, DiscoveryListener listener) {
-		this.consul = consul;
+	public ConsulCacheListener(KVCache kvCache, DiscoveryListener listener) {
+		this.kvCache = kvCache;
 		this.listener = listener;
 	}
 
@@ -54,15 +55,21 @@ public class ConsulCacheListener implements ConsulCache.Listener<ServiceHealthKe
 			// Get cache instance host/port from consul health key
 			HostAndPort hostAndPort = HostAndPort.fromParts(
 					instance.getService().getAddress(), instance.getService().getPort());
-			String cacheInstanceString = hostAndPort.toString() + "-";
 
-			// Try getting cache size from kv-store
-			Optional<String> sizeLookup = consul.keyValueClient().getValueAsString(hostAndPort.toString());
-			if (sizeLookup.isPresent()) {
-				cacheInstanceString += sizeLookup.get();
+			// Try getting cache size from kv cache, otherwise 0
+			int cacheSize = 0;
+			try {
+				Optional<String> lookup =
+						this.kvCache.getMap()
+								.get(hostAndPort.toString())
+								.getValueAsString();
+				cacheSize = Integer.parseInt(lookup.or("0"));
+			} catch (Exception e) {
+				LOG.debug("KV lookup failed, default cache size of 0 will be used for {}",
+						hostAndPort.toString());
 			}
 
-			newList.add(CacheInstance.fromString(cacheInstanceString));
+			newList.add(new CacheInstance(hostAndPort, cacheSize));
 		}
 		LOG.debug("New instance list created: {}", newList);
 
