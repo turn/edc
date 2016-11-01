@@ -1,10 +1,12 @@
 #!/bin/bash
 
+DOCKER_DIR=$1
+
 echo "Building edc-consul..."
-docker build -t edc-consul:test consul
+docker build -t edc-consul:test "$DOCKER_DIR"/consul
 
 echo "Building edc-redis..."
-docker build -t edc-redis:test redis
+docker build -t edc-redis:test "$DOCKER_DIR"/redis
 
 CONSUL_RUNNING=$(docker inspect --format="{{ .State.Running }}" edc-consul 2> /dev/null)
 
