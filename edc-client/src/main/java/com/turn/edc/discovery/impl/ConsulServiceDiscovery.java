@@ -17,6 +17,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
 import com.orbitz.consul.Consul;
+import com.orbitz.consul.cache.KVCache;
 import com.orbitz.consul.cache.ServiceHealthCache;
 import com.orbitz.consul.model.ConsulResponse;
 import com.orbitz.consul.model.health.ServiceHealth;
@@ -41,6 +42,7 @@ public class ConsulServiceDiscovery extends DiscoveryListener implements Service
 
 	private Consul consul;
 	private ServiceHealthCache servicesCache;
+	private KVCache kvCache;
 	private List<CacheInstance> liveInstances = Lists.newArrayList();
 	private List<DiscoveryListener> listeners = Lists.newLinkedList();
 
@@ -58,8 +60,16 @@ public class ConsulServiceDiscovery extends DiscoveryListener implements Service
 			listener.update(this.liveInstances);
 		}
 
+		this.kvCache = KVCache.newCache(this.consul.keyValueClient(), serviceName);
+		try {
+			this.kvCache.start();
+		} catch (Exception e) {
+			LOG.warn("Consul key-value cache failed to start so cache sizes will not be taken into account in the selection layer");
+			LOG.debug(ExceptionUtils.getStackTrace(e));
+
+		}
 		this.servicesCache = ServiceHealthCache.newCache(consul.healthClient(), serviceName);
-		this.servicesCache.addListener(new ConsulCacheListener(this.consul, this));
+		this.servicesCache.addListener(new ConsulCacheListener(this.kvCache, this));
 		try {
 			this.servicesCache.start();
 		} catch (Exception e) {
@@ -73,6 +83,11 @@ public class ConsulServiceDiscovery extends DiscoveryListener implements Service
 			servicesCache.stop();
 		} catch (Exception e) {
 			LOG.error("Failed to stop consul service cache: " + ExceptionUtils.getStackTrace(e));
+		}
+		try {
+			kvCache.stop();
+		} catch (Exception e) {
+			LOG.error("Failed to stop consul key-value cache: " + ExceptionUtils.getStackTrace(e));
 		}
 	}
 
@@ -106,15 +121,12 @@ public class ConsulServiceDiscovery extends DiscoveryListener implements Service
 			// Get cache instance host/port from consul health key
 			HostAndPort hostAndPort = HostAndPort.fromParts(
 					instance.getService().getAddress(), instance.getService().getPort());
-			String cacheInstanceString = hostAndPort.toString() + "-";
 
 			// Try getting cache size from kv-store
 			Optional<String> sizeLookup = consul.keyValueClient().getValueAsString(hostAndPort.toString());
-			if (sizeLookup.isPresent()) {
-				cacheInstanceString += sizeLookup.get();
-			}
+			int cacheSize = Integer.parseInt(sizeLookup.or("0"));
 
-			newList.add(CacheInstance.fromString(cacheInstanceString));
+			newList.add(new CacheInstance(hostAndPort, cacheSize));
 		}
 
 		return newList;
