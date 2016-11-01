@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
@@ -89,6 +90,15 @@ public class EDCClient {
 		this.router.close();
 	}
 
+	/**
+	 * Returns a collection of the cache instances available in the selection layer
+	 * @return Collection of selectable cache instances
+	 */
+	public Collection<HostAndPort> allAvailableCacheInstances() {
+		return this.selector.allInstances().stream()
+				.map(CacheInstance::getHostAndPort)
+				.collect(Collectors.toList());
+	}
 
 	/**
 	 * Retrieves the value at key in the provided destination cache

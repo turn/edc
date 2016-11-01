@@ -33,6 +33,10 @@ public class CacheInstanceSelector extends DiscoveryListener {
 		provider = new UniformDistributionSelection(Lists.newArrayList());
 	}
 
+	public Collection<CacheInstance> allInstances() {
+		return provider.allInstances();
+	}
+
 	public Collection<CacheInstance> select(int n) throws InvalidParameterException {
 		return provider.selectInstances(n);
 	}

@@ -25,6 +25,11 @@ public class UniformDistributionSelection implements SelectionProvider {
 	}
 
 	@Override
+	public Collection<CacheInstance> allInstances() {
+		return this.instances;
+	}
+
+	@Override
 	public Collection<CacheInstance> selectInstances(int n) throws InvalidParameterException {
 		if (nInstances < 1) {
 			throw new InvalidParameterException("Not enough instances to select from!");
