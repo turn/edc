@@ -11,7 +11,7 @@ import com.turn.edc.storage.StorageConnector;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.commons.codec.binary.Base64;
+import com.google.common.io.BaseEncoding;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
 
@@ -51,7 +51,7 @@ public class JedisStorageConnector extends StorageConnector {
 
 		try {
 			Pipeline p = jedis.pipelined();
-			p.hset(key, subkey, Base64.encodeBase64String(value));
+			p.hset(key, subkey, BaseEncoding.base64().encode(value));
 			p.expire(key, ttl);
 			p.sync();
 		} catch (Exception e) {
@@ -79,7 +79,7 @@ public class JedisStorageConnector extends StorageConnector {
 		if (res == null) {
 			throw new KeyNotFoundException(key + ":" + subkey);
 		}
-		return Base64.decodeBase64(res);
+		return BaseEncoding.base64().decode(res);
 	}
 
 	@Override
