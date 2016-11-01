@@ -70,15 +70,41 @@ public class EDCClient {
 		this.discovery.attachListeners(this.router, this.selector);
 	}
 
+	/**
+	 * Starts the EDC client
+	 *
+	 * @throws Exception Initialization failed
+	 */
 	public void start() throws Exception {
 		logger.info("Starting EDC client...");
 		this.discovery.start();
 	}
 
+	/**
+	 * Shuts down the EDC client
+	 */
 	public void close() {
-		logger.info("Shutting down EDC...");
+		logger.info("Shutting down EDC client...");
 		this.discovery.shutdown();
 		this.router.close();
+	}
+
+
+	/**
+	 * Retrieves the value at key in the provided destination cache
+	 *
+	 * @param hostAndPort Destination host and port
+	 * @param key Top-level key
+	 *
+	 * @return Value in bytes
+	 * @throws IOException Connection error with destination cache
+	 * @throws TimeoutException Retrieval timeout
+	 * @throws KeyNotFoundException Key was not found at the provided destination
+	 * @throws InvalidParameterException If an invalid destination is provided
+	 */
+	public byte[] get(HostAndPort hostAndPort, String key)
+			throws IOException, TimeoutException, KeyNotFoundException, InvalidParameterException {
+		return get(hostAndPort, key, "");
 	}
 
 	/**
