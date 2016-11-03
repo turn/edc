@@ -36,6 +36,10 @@ public class ConsulServiceDiscovery extends DiscoveryListener implements Service
 
 	private static final Logger LOG = LoggerFactory.getLogger(ConsulServiceDiscovery.class);
 
+	// Prevents timeout exceptions
+	// https://github.com/OrbitzWorldwide/consul-client/issues/135
+	private static final int READ_TIMEOUT_SEC = 20;
+
 	private final String serviceName;
 	private final String consulURL;
 	private final int consulPort;
@@ -54,7 +58,9 @@ public class ConsulServiceDiscovery extends DiscoveryListener implements Service
 
 	@Override
 	public void start() throws IOException {
-		this.consul = Consul.builder().withUrl(new URL("http", consulURL, consulPort, "")).build();
+		this.consul = Consul.builder().withUrl(new URL("http", consulURL, consulPort, ""))
+				.withReadTimeoutMillis(READ_TIMEOUT_SEC * 1000)
+				.build();
 		this.liveInstances = getLiveInstances(this.consul, this.serviceName);
 		for (DiscoveryListener listener : this.listeners) {
 			listener.update(this.liveInstances);
