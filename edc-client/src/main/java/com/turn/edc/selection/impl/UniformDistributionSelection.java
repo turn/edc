@@ -39,7 +39,7 @@ public class UniformDistributionSelection implements SelectionProvider {
 			return Lists.newArrayList();
 		}
 
-		int[] indices = new Random().ints(0, nInstances).distinct().limit(n).toArray();
+		int[] indices = new Random().ints(0, nInstances).distinct().limit(Math.min(n, nInstances)).toArray();
 
 		List<CacheInstance> selected = Lists.newArrayListWithCapacity(indices.length);
 
