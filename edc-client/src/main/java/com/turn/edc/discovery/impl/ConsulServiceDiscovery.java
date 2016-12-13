@@ -86,12 +86,16 @@ public class ConsulServiceDiscovery extends DiscoveryListener implements Service
 	@Override
 	public void shutdown() {
 		try {
-			servicesCache.stop();
+			if (servicesCache != null) {
+				servicesCache.stop();
+			}
 		} catch (Exception e) {
 			LOG.error("Failed to stop consul service cache: " + ExceptionUtils.getStackTrace(e));
 		}
 		try {
-			kvCache.stop();
+			if (kvCache != null) {
+				kvCache.stop();
+			}
 		} catch (Exception e) {
 			LOG.error("Failed to stop consul key-value cache: " + ExceptionUtils.getStackTrace(e));
 		}
