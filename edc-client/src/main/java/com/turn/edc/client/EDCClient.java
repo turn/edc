@@ -149,9 +149,9 @@ public class EDCClient {
 	 * @return Collection of host/port of the selected cache instances
 	 * @throws InvalidParameterException If replication is less than 1 or no cache instances were found
 	 */
-	public Collection<HostAndPort> set(int replication, String key, byte[] value, int ttl)
+	public Collection<HostAndPort> put(int replication, String key, byte[] value, int ttl)
 			throws InvalidParameterException {
-		return set(replication, key, "", value, ttl);
+		return put(replication, key, "", value, ttl);
 	}
 
 	/**
@@ -166,7 +166,7 @@ public class EDCClient {
 	 * @return Collection of host/port of the selected cache instances
 	 * @throws InvalidParameterException If replication is less than 1 or no cache instances were found
 	 */
-	public Collection<HostAndPort> set(int replication, String key, String subkey, byte[] value, int ttl)
+	public Collection<HostAndPort> put(int replication, String key, String subkey, byte[] value, int ttl)
 			throws InvalidParameterException {
 		if (replication < 1) {
 			throw new InvalidParameterException("replication", Integer.toString(replication),
@@ -200,7 +200,7 @@ public class EDCClient {
 	 *
 	 * @throws InvalidParameterException If an invalid destination is provided
 	 */
-	public void set(HostAndPort destination, String key, String subkey, byte[] value, int ttl)
+	public void put(HostAndPort destination, String key, String subkey, byte[] value, int ttl)
 			throws InvalidParameterException {
 		checkHostAndPort(destination);
 
