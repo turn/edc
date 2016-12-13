@@ -9,6 +9,7 @@ import com.turn.edc.exception.KeyNotFoundException;
 import com.turn.edc.storage.StorageConnector;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.concurrent.TimeoutException;
 
 import com.google.common.io.BaseEncoding;
@@ -25,11 +26,18 @@ public class JedisStorageConnector extends StorageConnector {
 
 	private static final String DEFAULT_SUBKEY = "_SINGLEFIELD";
 
+	private final String host;
+	private final int port;
 	private final Jedis jedis;
+
+	// Weak reference since most of the time we don't need the string representation
+	private WeakReference<String> toString = new WeakReference<>(null);
 
 	public JedisStorageConnector(String host, String port, int timeout) throws IOException {
 
-		this.jedis = new Jedis(host, Integer.parseInt(port), timeout);
+		this.host = host;
+		this.port = Integer.parseInt(port);
+		this.jedis = new Jedis(this.host, this.port, 0);
 
 		try {
 			this.jedis.ping();
@@ -85,5 +93,20 @@ public class JedisStorageConnector extends StorageConnector {
 	@Override
 	public void close() {
 		this.jedis.close();
+	}
+
+	@Override
+	public String toString() {
+		if (this.toString.get() == null) {
+			this.toString = new WeakReference<String>(
+					(new StringBuilder())
+							.append("Jedis ")
+							.append(host)
+							.append(":")
+							.append(port)
+							.toString()
+			);
+		}
+		return this.toString.get();
 	}
 }

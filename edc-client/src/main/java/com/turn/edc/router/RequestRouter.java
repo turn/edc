@@ -61,8 +61,12 @@ public class RequestRouter extends DiscoveryListener {
 		StorageConnection connection = routingMap.get(destination.hashCode());
 
 		if (connection == null) {
+			logger.debug("Could not route request to {}", destination.toString());
 			return false;
 		}
+
+		logger.debug("Posting store request {} to destination {}",
+				destination.toString(), request.toString());
 
 		connection.post(request);
 

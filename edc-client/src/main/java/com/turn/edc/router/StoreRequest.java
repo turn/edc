@@ -5,6 +5,8 @@
 
 package com.turn.edc.router;
 
+import java.lang.ref.WeakReference;
+
 /**
  * An immutable object representing a cache store request
  *
@@ -15,6 +17,9 @@ public class StoreRequest {
 	private final String subkey;
 	private final byte[] payload;
 	private final int ttl;
+
+	// Weak reference since most of the time we don't need the string representation
+	private WeakReference<String> toString = new WeakReference<>(null);
 
 	public StoreRequest(String key, String subkey, byte[] payload, int ttl) {
 		this.key = key;
@@ -37,6 +42,21 @@ public class StoreRequest {
 
 	public int getTtl() {
 		return this.ttl;
+	}
+
+	@Override
+	public String toString() {
+		if (this.toString.get() == null) {
+			this.toString = new WeakReference<String>(
+					(new StringBuilder())
+					.append("key=").append(key)
+					.append(" subkey=").append(subkey)
+					.append(" ttl=").append(ttl)
+					.append(" payload_length=").append(payload.length)
+					.toString()
+			);
+		}
+		return this.toString.get();
 	}
 
 }

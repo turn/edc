@@ -36,10 +36,11 @@ public abstract class StorageConnector {
 
 	@Subscribe
 	public void handleStoreRequest(StoreRequest request) {
+		LOG.debug("Storing {}", request.toString());
 		try {
 			this.set(request.getKey(), request.getSubkey(), request.getPayload(), request.getTtl(), 10);
 		} catch (IOException e) {
-			LOG.error("Store request failed");
+			LOG.error("Store request failed to {}", this.toString());
 			LOG.debug(ExceptionUtils.getStackTrace(e));
 		}
 	}

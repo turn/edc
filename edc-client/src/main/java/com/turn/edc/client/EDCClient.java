@@ -88,6 +88,7 @@ public class EDCClient {
 		logger.info("Shutting down EDC client...");
 		this.discovery.shutdown();
 		this.router.close();
+		logger.info("Shut down complete");
 	}
 
 	/**

@@ -12,6 +12,7 @@ import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.lang.ref.WeakReference;
 
 import com.google.common.io.Closeables;
 import com.google.common.net.HostAndPort;
@@ -26,6 +27,9 @@ public class CacheInstance {
 	private final HostAndPort hostAndPort;
 	private final int cacheSize;
 	private final int hashCode;
+
+	// Weak reference since most of the time we don't need the string representation
+	private WeakReference<String> toString = new WeakReference<>(null);
 
 	// Instance to represent null object (null design pattern)
 	public static final CacheInstance NULL_CACHE_INSTANCE = new CacheInstance(
@@ -88,7 +92,16 @@ public class CacheInstance {
 
 	@Override
 	public String toString() {
-		return hostAndPort.toString() + "-" + Integer.toString(cacheSize);
+		if (this.toString.get() == null) {
+			this.toString = new WeakReference<String>(
+					(new StringBuilder())
+							.append(hostAndPort.getPort())
+							.append("-")
+							.append(cacheSize)
+							.toString()
+			);
+		}
+		return this.toString.get();
 	}
 
 	public byte[] serialize() throws IOException {
