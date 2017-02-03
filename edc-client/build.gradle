@@ -4,7 +4,7 @@
  */
 
 group = 'com.turn'
-version = '0.1'
+version = '0.2'
 
 dependencies {
 	compile project(':edc-common')
