@@ -66,7 +66,7 @@ public class RequestRouter extends DiscoveryListener {
 		}
 
 		logger.debug("Posting store request {} to destination {}",
-				destination.toString(), request.toString());
+				request.toString(), destination.toString());
 
 		connection.post(request);
 

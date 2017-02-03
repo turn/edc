@@ -95,7 +95,7 @@ public class CacheInstance {
 		if (this.toString.get() == null) {
 			this.toString = new WeakReference<String>(
 					(new StringBuilder())
-							.append(hostAndPort.getPort())
+							.append(hostAndPort.toString())
 							.append("-")
 							.append(cacheSize)
 							.toString()
