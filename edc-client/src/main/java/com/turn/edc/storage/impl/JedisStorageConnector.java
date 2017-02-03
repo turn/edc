@@ -14,6 +14,8 @@ import java.util.concurrent.TimeoutException;
 
 import com.google.common.io.BaseEncoding;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.Pipeline;
 
 /**
@@ -28,7 +30,7 @@ public class JedisStorageConnector extends StorageConnector {
 
 	private final String host;
 	private final int port;
-	private final Jedis jedis;
+	private final JedisPool jedisPool;
 
 	// Weak reference since most of the time we don't need the string representation
 	private WeakReference<String> toString = new WeakReference<>(null);
@@ -37,12 +39,19 @@ public class JedisStorageConnector extends StorageConnector {
 
 		this.host = host;
 		this.port = Integer.parseInt(port);
-		this.jedis = new Jedis(this.host, this.port, 0);
+		JedisPoolConfig config = new JedisPoolConfig();
+		// TODO: make these configurable
+		config.setMaxWaitMillis(100);
+		config.setMaxTotal(2);
+		// We prioritize writing the data ASAP so do validation after we attempted the write
+		config.setTestOnReturn(true);
+		this.jedisPool = new JedisPool(config, this.host, this.port, 0);
 
-		try {
-			this.jedis.ping();
-		} catch (Exception e) {
-			throw new IOException(e);
+		// Try pinging once
+		try (Jedis jedis = jedisPool.getResource()){
+			if (!jedis.ping().equals("PONG")) {
+				throw new IOException("Could not reach redis instance: " + toString());
+			}
 		}
 	}
 
@@ -57,7 +66,13 @@ public class JedisStorageConnector extends StorageConnector {
 			subkey = DEFAULT_SUBKEY;
 		}
 
-		try {
+		// Jedis instance will be auto-returned to the pool
+		try (Jedis jedis = jedisPool.getResource()){
+			// Test connectivity, this is cheaper than a full validation (i.e. ping)
+			if (!jedis.isConnected()) {
+				jedis.connect();
+			}
+
 			Pipeline p = jedis.pipelined();
 			p.hset(key, subkey, BaseEncoding.base64().encode(value));
 			p.expire(key, ttl);
@@ -79,7 +94,13 @@ public class JedisStorageConnector extends StorageConnector {
 		}
 
 		String res;
-		try {
+		// Jedis instance will be auto-returned to the pool
+		try (Jedis jedis = jedisPool.getResource()){
+			// Test connectivity, this is cheaper than a full validation (i.e. ping)
+			if (!jedis.isConnected()) {
+				jedis.connect();
+			}
+
 			res = jedis.hget(key, subkey);
 		} catch (Exception e) {
 			throw new IOException(e.getCause());
@@ -92,7 +113,7 @@ public class JedisStorageConnector extends StorageConnector {
 
 	@Override
 	public void close() {
-		this.jedis.close();
+		this.jedisPool.destroy();
 	}
 
 	@Override
