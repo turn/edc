@@ -10,9 +10,9 @@ import com.turn.edc.storage.StorageConnector;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeoutException;
 
-import com.google.common.io.BaseEncoding;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -74,7 +74,7 @@ public class JedisStorageConnector extends StorageConnector {
 			}
 
 			Pipeline p = jedis.pipelined();
-			p.hset(key, subkey, BaseEncoding.base64().encode(value));
+			p.hset(key.getBytes(StandardCharsets.UTF_8), subkey.getBytes(StandardCharsets.UTF_8), value);
 			p.expire(key, ttl);
 			p.sync();
 		} catch (Exception e) {
@@ -93,7 +93,7 @@ public class JedisStorageConnector extends StorageConnector {
 			subkey = DEFAULT_SUBKEY;
 		}
 
-		String res;
+		byte[] res;
 		// Jedis instance will be auto-returned to the pool
 		try (Jedis jedis = jedisPool.getResource()){
 			// Test connectivity, this is cheaper than a full validation (i.e. ping)
@@ -101,14 +101,14 @@ public class JedisStorageConnector extends StorageConnector {
 				jedis.connect();
 			}
 
-			res = jedis.hget(key, subkey);
+			res = jedis.hget(key.getBytes(StandardCharsets.UTF_8), subkey.getBytes(StandardCharsets.UTF_8));
 		} catch (Exception e) {
 			throw new IOException(e.getCause());
 		}
 		if (res == null) {
 			throw new KeyNotFoundException(key + ":" + subkey);
 		}
-		return BaseEncoding.base64().decode(res);
+		return res;
 	}
 
 	@Override
