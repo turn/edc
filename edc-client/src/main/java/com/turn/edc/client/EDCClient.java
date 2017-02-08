@@ -159,7 +159,7 @@ public class EDCClient {
 	 *
 	 * @param replication Desired number of cache instances to store the key
 	 * @param key Top-level key
-	 * @param subkey Subkey
+	 * @param subkey Subkey (i.e. hash)
 	 * @param value Value
 	 * @param ttl TTL (in seconds) for key
 	 *
@@ -185,8 +185,32 @@ public class EDCClient {
 			router.store(selectedDestination, new StoreRequest(key, subkey, value, ttl));
 			ret.add(selectedDestination.getHostAndPort());
 		}
-
 		return ret;
+	}
+
+	/**
+	 * Set the value at key in the given CacheInstance destinations
+	 *
+	 * @param destinations Collection of cache instances
+	 * @param key Top-level key
+	 * @param subkey Subkey (i.e. hash)
+	 * @param value Value
+	 * @param ttl TTL (in seconds) for key
+	 *
+	 * @return Original collection of HostAndPort destinations
+	 * @throws InvalidParameterException If destinations is null
+	 */
+	public Collection<HostAndPort> put(Collection<HostAndPort> destinations, String key, String subkey, byte[] value, int ttl)
+			throws InvalidParameterException {
+		if (destinations == null) {
+			throw new InvalidParameterException("destinations", "null",
+					"Destination cache instances should not be null");
+		}
+
+		for (HostAndPort destination : destinations) {
+			put(destination, key, subkey, value, ttl);
+		}
+		return destinations;
 	}
 
 	/**
