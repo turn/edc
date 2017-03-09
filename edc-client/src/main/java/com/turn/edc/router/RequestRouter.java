@@ -50,7 +50,18 @@ public class RequestRouter extends DiscoveryListener {
 		StorageConnection connection = routingMap.get(source.hashCode());
 
 		if (connection == null) {
-			throw new IOException("Data source not registered!");
+			logger.info("Existing connection not found, creating new connection: {}", source);
+			try {
+				connection = connectorFactory.create(
+						source.getHostAndPort().getHostText(),
+						Integer.toString(source.getHostAndPort().getPort()),
+						TIMEOUT
+				);
+			} catch (IOException ioe) {
+				logger.error("Unable to establish new connection to {}" + source);
+				throw ioe;
+			}
+			routingMap.put(source.hashCode(), connection);
 		}
 
 		return connection.get(key, subkey, TIMEOUT);
@@ -137,6 +148,7 @@ public class RequestRouter extends DiscoveryListener {
 		newRoutingMap.keySet().forEach(oldReference::remove);
 
 		// Close all remaining (presumed dead) connections in the old connection map
+		// TODO: keep live cross-dc connections
 		logger.debug("Closing {} old connections", oldReference.size());
 		oldReference.values().forEach(StorageConnection::close);
 	}
