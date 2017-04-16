@@ -42,6 +42,8 @@ public class RequestRouter extends DiscoveryListener {
 	private volatile Map<Integer, StorageConnection> routingMap = Maps.newConcurrentMap();
 	private final static int TIMEOUT = 10;
 
+	private static final long TTL_SET_SUCCESS = 1l;
+
 	public RequestRouter() {
 	}
 
@@ -82,6 +84,29 @@ public class RequestRouter extends DiscoveryListener {
 		connection.post(request);
 
 		return true;
+	}
+	
+	public boolean setTTL(CacheInstance destination, String key, int ttl) 
+			throws KeyNotFoundException, TimeoutException, IOException{
+
+		StorageConnection connection = routingMap.get(destination.hashCode());
+
+		if (connection == null) {
+			logger.info("Existing connection not found, creating new connection: {}", destination);
+			try {
+				connection = connectorFactory.create(
+						destination.getHostAndPort().getHostText(),
+						Integer.toString(destination.getHostAndPort().getPort()),
+						TIMEOUT
+				);
+			} catch (IOException ioe) {
+				logger.error("Unable to establish new connection to {}" + destination);
+				throw ioe;
+			}
+			routingMap.put(destination.hashCode(), connection);
+		}
+
+		return connection.setTTL(key, ttl, TIMEOUT);
 	}
 
 	/**

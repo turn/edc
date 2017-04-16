@@ -57,6 +57,11 @@ public class SpymemcachedStorageConnector extends StorageConnector {
 	public byte[] get(String key, String subkey, int timeout) throws KeyNotFoundException, TimeoutException, IOException {
 		return (byte[]) client.get(key + ":" + subkey);
 	}
+	
+	@Override
+	public boolean setTTL(String key, int ttl, int timeout) throws IOException {
+		return false;
+	}
 
 	@Override
 	public void close() {

@@ -31,6 +31,8 @@ public abstract class StorageConnector {
 	public abstract byte[] get(String key, int timeout) throws KeyNotFoundException, TimeoutException, IOException;
 
 	public abstract byte[] get(String key, String subkey, int timeout) throws KeyNotFoundException, TimeoutException, IOException;
+	
+	public abstract boolean setTTL(String key, int ttl, int timeout) throws IOException;
 
 	public abstract void close();
 
@@ -43,5 +45,10 @@ public abstract class StorageConnector {
 			LOG.error("Store request failed to {}", this.toString());
 			LOG.debug(ExceptionUtils.getStackTrace(e));
 		}
+	}
+
+	public void setTTL(String key, int timeout) throws KeyNotFoundException, TimeoutException, IOException {
+		// TODO Auto-generated method stub
+		
 	}
 }
