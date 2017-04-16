@@ -87,7 +87,7 @@ public class RequestRouter extends DiscoveryListener {
 	}
 	
 	public boolean setTTL(CacheInstance destination, String key, int ttl) 
-			throws KeyNotFoundException, TimeoutException, IOException{
+			throws TimeoutException, IOException{
 
 		StorageConnection connection = routingMap.get(destination.hashCode());
 

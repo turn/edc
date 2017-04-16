@@ -43,7 +43,7 @@ public class StorageConnection {
 	}
 	
 	public boolean setTTL(String key, int ttl, int timeOut)
-			throws KeyNotFoundException, TimeoutException, IOException {
+			throws TimeoutException, IOException {
 		return this.connector.setTTL(key, ttl, timeOut);
 	}
 
