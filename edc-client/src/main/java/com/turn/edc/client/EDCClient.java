@@ -248,7 +248,7 @@ public class EDCClient {
 			throws TimeoutException, IOException, InvalidParameterException {
 		checkHostAndPort(hostAndPort);
 
-		return router.setTTL(new CacheInstance(hostAndPort, -1), key, ttl) ;
+		return router.setTTL(new CacheInstance(hostAndPort), key, ttl) ;
 	}
 
 	/**

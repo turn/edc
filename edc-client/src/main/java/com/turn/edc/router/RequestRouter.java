@@ -42,30 +42,13 @@ public class RequestRouter extends DiscoveryListener {
 	private volatile Map<Integer, StorageConnection> routingMap = Maps.newConcurrentMap();
 	private final static int TIMEOUT = 10;
 
-	private static final long TTL_SET_SUCCESS = 1l;
-
 	public RequestRouter() {
 	}
 
 	public byte[] get(CacheInstance source, String key, String subkey)
 			throws KeyNotFoundException, TimeoutException, IOException {
-		StorageConnection connection = routingMap.get(source.hashCode());
-
-		if (connection == null) {
-			logger.info("Existing connection not found, creating new connection: {}", source);
-			try {
-				connection = connectorFactory.create(
-						source.getHostAndPort().getHostText(),
-						Integer.toString(source.getHostAndPort().getPort()),
-						TIMEOUT
-				);
-			} catch (IOException ioe) {
-				logger.error("Unable to establish new connection to {}" + source);
-				throw ioe;
-			}
-			routingMap.put(source.hashCode(), connection);
-		}
-
+		StorageConnection connection = getConnection(source);
+		
 		return connection.get(key, subkey, TIMEOUT);
 	}
 
@@ -89,22 +72,7 @@ public class RequestRouter extends DiscoveryListener {
 	public boolean setTTL(CacheInstance destination, String key, int ttl) 
 			throws TimeoutException, IOException{
 
-		StorageConnection connection = routingMap.get(destination.hashCode());
-
-		if (connection == null) {
-			logger.info("Existing connection not found, creating new connection: {}", destination);
-			try {
-				connection = connectorFactory.create(
-						destination.getHostAndPort().getHostText(),
-						Integer.toString(destination.getHostAndPort().getPort()),
-						TIMEOUT
-				);
-			} catch (IOException ioe) {
-				logger.error("Unable to establish new connection to {}" + destination);
-				throw ioe;
-			}
-			routingMap.put(destination.hashCode(), connection);
-		}
+		StorageConnection connection = getConnection(destination);
 
 		return connection.setTTL(key, ttl, TIMEOUT);
 	}
@@ -178,4 +146,28 @@ public class RequestRouter extends DiscoveryListener {
 		oldReference.values().forEach(StorageConnection::close);
 	}
 
+	/*
+	 * Get the storage connection
+	 * If the connection not found, create a new one
+	 * */
+	public StorageConnection getConnection(CacheInstance source) 
+			throws TimeoutException, IOException {
+		StorageConnection connection = routingMap.get(source.hashCode());
+
+		if (connection == null) {
+			logger.info("Existing connection not found, creating new connection: {}", source);
+			try {
+				connection = connectorFactory.create(
+						source.getHostAndPort().getHostText(),
+						Integer.toString(source.getHostAndPort().getPort()),
+						TIMEOUT
+				);
+			} catch (IOException ioe) {
+				logger.error("Unable to establish new connection to {}" + source);
+				throw ioe;
+			}
+			routingMap.put(source.hashCode(), connection);
+		}
+		return connection;
+	}
 }

@@ -46,9 +46,4 @@ public abstract class StorageConnector {
 			LOG.debug(ExceptionUtils.getStackTrace(e));
 		}
 	}
-
-	public void setTTL(String key, int timeout) throws KeyNotFoundException, TimeoutException, IOException {
-		// TODO Auto-generated method stub
-		
-	}
 }
