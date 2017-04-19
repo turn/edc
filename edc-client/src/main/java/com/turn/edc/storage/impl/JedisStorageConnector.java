@@ -29,6 +29,10 @@ public class JedisStorageConnector extends StorageConnector {
 
 	private static final String DEFAULT_SUBKEY = "_SINGLEFIELD";
 
+	private static final Long TTL_SET_FAILURE = 0l;
+
+	private static final Long TTL_SET_SUCCESS = 1l;
+
 	private final String host;
 	private final int port;
 	private final JedisPool jedisPool;
@@ -111,6 +115,25 @@ public class JedisStorageConnector extends StorageConnector {
 		}
 	}
 
+	@Override
+	public boolean setTTL(String key, int ttl, int timeout) throws IOException {
+		// Jedis instance will be auto-returned to the pool
+		Long status = TTL_SET_FAILURE;
+		try (Jedis jedis = jedisPool.getResource()) {
+			// Test connectivity, this is cheaper than a full validation (i.e. ping)
+			if (!jedis.isConnected()) {
+				jedis.connect();
+			}
+
+			Pipeline p = jedis.pipelined();
+			status = p.expire(key, ttl).get();
+			p.sync();
+		} catch (Exception e) {
+			throw new IOException(e.getCause());
+		}
+		return status == TTL_SET_SUCCESS;
+	}
+	
 	@Override
 	public void close() {
 		this.jedisPool.destroy();

@@ -62,6 +62,11 @@ public class ConnectionFactory {
 				public byte[] get(String key, String subkey, int timeout) throws KeyNotFoundException, TimeoutException, IOException {
 					return new byte[0];
 				}
+				
+				@Override
+				public boolean setTTL(String key, int ttl, int timeout) throws IOException {
+					return false;
+				}
 
 				@Override
 				public void close() {

@@ -5,6 +5,7 @@
 
 package com.turn.edc.storage;
 
+import com.turn.edc.discovery.CacheInstance;
 import com.turn.edc.exception.KeyNotFoundException;
 import com.turn.edc.router.StoreRequest;
 
@@ -39,6 +40,11 @@ public class StorageConnection {
 
 	public void post(StoreRequest request) {
 		this.storeRequestBus.post(request);
+	}
+	
+	public boolean setTTL(String key, int ttl, int timeOut)
+			throws TimeoutException, IOException {
+		return this.connector.setTTL(key, ttl, timeOut);
 	}
 
 	public void close() {

@@ -230,6 +230,26 @@ public class EDCClient {
 
 		router.store(new CacheInstance(destination), new StoreRequest(key, subkey, value, ttl));
 	}
+	
+	/**
+	 * Set the ttl for a key in the provided destination
+	 *
+	 * @param destination Destination host and port
+	 * @param key Top-level key
+	 * @param ttl TTL (in seconds) for the top-level key
+	 * 
+	 * @return whether setTTL operation fail or succeed
+	 *
+	 * @throws IOException 
+	 * @throws TimeoutException 
+	 * @throws InvalidParameterException 
+	 */
+	public boolean setTTL(HostAndPort hostAndPort, String key, int ttl)
+			throws TimeoutException, IOException, InvalidParameterException {
+		checkHostAndPort(hostAndPort);
+
+		return router.setTTL(new CacheInstance(hostAndPort), key, ttl) ;
+	}
 
 	/**
 	 * Checks if the hostAndPort is valid (host is not empty, and port is > 0)

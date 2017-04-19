@@ -47,23 +47,8 @@ public class RequestRouter extends DiscoveryListener {
 
 	public byte[] get(CacheInstance source, String key, String subkey)
 			throws KeyNotFoundException, TimeoutException, IOException {
-		StorageConnection connection = routingMap.get(source.hashCode());
-
-		if (connection == null) {
-			logger.info("Existing connection not found, creating new connection: {}", source);
-			try {
-				connection = connectorFactory.create(
-						source.getHostAndPort().getHostText(),
-						Integer.toString(source.getHostAndPort().getPort()),
-						TIMEOUT
-				);
-			} catch (IOException ioe) {
-				logger.error("Unable to establish new connection to {}" + source);
-				throw ioe;
-			}
-			routingMap.put(source.hashCode(), connection);
-		}
-
+		StorageConnection connection = getConnection(source);
+		
 		return connection.get(key, subkey, TIMEOUT);
 	}
 
@@ -82,6 +67,14 @@ public class RequestRouter extends DiscoveryListener {
 		connection.post(request);
 
 		return true;
+	}
+	
+	public boolean setTTL(CacheInstance destination, String key, int ttl) 
+			throws TimeoutException, IOException{
+
+		StorageConnection connection = getConnection(destination);
+
+		return connection.setTTL(key, ttl, TIMEOUT);
 	}
 
 	/**
@@ -153,4 +146,28 @@ public class RequestRouter extends DiscoveryListener {
 		oldReference.values().forEach(StorageConnection::close);
 	}
 
+	/*
+	 * Get the storage connection
+	 * If the connection not found, create a new one
+	 * */
+	public StorageConnection getConnection(CacheInstance source) 
+			throws TimeoutException, IOException {
+		StorageConnection connection = routingMap.get(source.hashCode());
+
+		if (connection == null) {
+			logger.info("Existing connection not found, creating new connection: {}", source);
+			try {
+				connection = connectorFactory.create(
+						source.getHostAndPort().getHostText(),
+						Integer.toString(source.getHostAndPort().getPort()),
+						TIMEOUT
+				);
+			} catch (IOException ioe) {
+				logger.error("Unable to establish new connection to {}" + source);
+				throw ioe;
+			}
+			routingMap.put(source.hashCode(), connection);
+		}
+		return connection;
+	}
 }

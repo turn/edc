@@ -31,6 +31,8 @@ public abstract class StorageConnector {
 	public abstract byte[] get(String key, int timeout) throws KeyNotFoundException, TimeoutException, IOException;
 
 	public abstract byte[] get(String key, String subkey, int timeout) throws KeyNotFoundException, TimeoutException, IOException;
+	
+	public abstract boolean setTTL(String key, int ttl, int timeout) throws IOException;
 
 	public abstract void close();
 
