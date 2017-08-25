@@ -4,7 +4,7 @@
  */
 
 group = 'com.turn'
-version = '0.4'
+version = '0.4.1'
 
 dependencies {
 	compile project(':edc-common')
@@ -20,5 +20,18 @@ dependencies {
 
             'com.orbitz.consul:consul-client:0.13.2',
             'org.apache.curator:curator-x-discovery:2.4.2'
-
+			
+	// Upload Turn jar to Turn Maven
+	uploadArchives {
+	    repositories {
+	        mavenDeployer {
+	            repository(url: "http://maven.turn.com/content/repositories/turn/") {
+	                authentication(userName: mavenUser, password: mavenPassword)
+	                pom.version = project.version
+	                pom.groupId = project.group
+	                pom.artifactId = project.name
+	            }
+	        }
+	    }
+	}	
 }

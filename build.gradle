@@ -17,6 +17,7 @@ repositories {
     mavenCentral()
 }
 
+
 subprojects {
     apply plugin: 'java'
     apply plugin: 'maven'
@@ -27,5 +28,10 @@ subprojects {
     repositories {
         mavenCentral()
     }
-
+	if (!project.hasProperty("mavenUser")){
+	    ext.mavenUser = ""
+	}
+	if (!project.hasProperty("mavenPassword")){
+	    ext.mavenPassword = ""
+	}
 }
