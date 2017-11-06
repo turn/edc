@@ -10,7 +10,6 @@ import com.turn.edc.storage.StorageConnector;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.concurrent.TimeoutException;
 
@@ -18,6 +17,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.Protocol;
 
 /**
  * ConnectionFactory connector to Redis using Jedis library
@@ -47,10 +47,12 @@ public class JedisStorageConnector extends StorageConnector {
 		JedisPoolConfig config = new JedisPoolConfig();
 		// TODO: make these configurable
 		config.setMaxWaitMillis(100);
-		config.setMaxTotal(2);
+		config.setMaxTotal(4);
 		// We prioritize writing the data ASAP so do validation after we attempted the write
 		config.setTestOnReturn(true);
-		this.jedisPool = new JedisPool(config, this.host, this.port, 0);
+
+		// Set connection timeout to 0 so we can keep idle connects
+		this.jedisPool = new JedisPool(config, this.host, this.port, 0, timeout, null, Protocol.DEFAULT_DATABASE, null);
 
 		// Try pinging once
 		try (Jedis jedis = jedisPool.getResource()){

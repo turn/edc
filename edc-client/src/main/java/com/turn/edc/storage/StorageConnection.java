@@ -5,13 +5,14 @@
 
 package com.turn.edc.storage;
 
-import com.turn.edc.discovery.CacheInstance;
 import com.turn.edc.exception.KeyNotFoundException;
 import com.turn.edc.router.StoreRequest;
 
 import java.io.IOException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 
+import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
 
 /**
@@ -28,7 +29,7 @@ public class StorageConnection {
 	public StorageConnection(StorageConnector connector) {
 		this.connector = connector;
 
-		this.storeRequestBus = new EventBus();
+		this.storeRequestBus = new AsyncEventBus(Executors.newSingleThreadExecutor());
 		this.storeRequestBus.register(connector);
 	}
 
