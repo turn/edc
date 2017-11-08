@@ -9,7 +9,6 @@ import com.turn.edc.discovery.CacheInstance;
 import com.turn.edc.discovery.DiscoveryListener;
 import com.turn.edc.exception.InvalidParameterException;
 import com.turn.edc.selection.impl.UniformDistributionSelection;
-import com.turn.edc.selection.impl.WeightedDistributionSelection;
 
 import java.util.Collection;
 import java.util.List;
