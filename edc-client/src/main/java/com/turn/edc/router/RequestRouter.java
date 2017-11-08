@@ -106,7 +106,7 @@ public class RequestRouter extends DiscoveryListener {
 				try {
 					newConnection = connectorFactory.create(
 							instance.getHostAndPort().getHostText(),
-							Integer.toString(instance.getHostAndPort().getPort()),
+							instance.getHostAndPort().getPort(),
 							TIMEOUT
 					);
 					newRoutingMap.put(instance.hashCode(), newConnection);
@@ -159,7 +159,7 @@ public class RequestRouter extends DiscoveryListener {
 			try {
 				connection = connectorFactory.create(
 						source.getHostAndPort().getHostText(),
-						Integer.toString(source.getHostAndPort().getPort()),
+						source.getHostAndPort().getPort(),
 						TIMEOUT
 				);
 			} catch (IOException ioe) {

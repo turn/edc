@@ -23,9 +23,13 @@ import net.spy.memcached.MemcachedClient;
 public class SpymemcachedStorageConnector extends StorageConnector {
 
 	private final MemcachedClient client;
+	private final String host;
+	private final int port;
 
-	public SpymemcachedStorageConnector(String host, String port, int timeout) throws IOException {
-		this.client = new MemcachedClient(new InetSocketAddress(host, Integer.parseInt(port)));
+	public SpymemcachedStorageConnector(String host, int port, int timeout) throws IOException {
+		this.host = host;
+		this.port = port;
+		this.client = new MemcachedClient(new InetSocketAddress(this.host, this.port));
 		// TODO: Sanity check host and port
 	}
 
@@ -67,4 +71,13 @@ public class SpymemcachedStorageConnector extends StorageConnector {
 	public void close() {
 
 	}
+
+	public String getHost() {
+		return this.host;
+	}
+
+	public int getPort() {
+		return this.port;
+	}
+
 }

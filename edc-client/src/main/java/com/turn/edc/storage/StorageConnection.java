@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Turn Inc. All Rights Reserved.
+ * Copyright (C) 2016-2017 Turn Inc. All Rights Reserved.
  * Proprietary and confidential.
  */
 
@@ -9,11 +9,14 @@ import com.turn.edc.exception.KeyNotFoundException;
 import com.turn.edc.router.StoreRequest;
 
 import java.io.IOException;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.SubscriberExceptionHandler;
 
 /**
  * Object that represents a connection to a storage instance. Contains an eventbus that will handle
@@ -26,10 +29,15 @@ public class StorageConnection {
 	private final StorageConnector connector;
 	private final EventBus storeRequestBus;
 
-	public StorageConnection(StorageConnector connector) {
+	public StorageConnection(StorageConnector connector, SubscriberExceptionHandler subscriberExceptionHandler,
+			boolean async, int asyncQueueCapacity) {
 		this.connector = connector;
 
-		this.storeRequestBus = new AsyncEventBus(Executors.newSingleThreadExecutor());
+		this.storeRequestBus = async ? new AsyncEventBus(
+				new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS,
+						new LinkedBlockingQueue<Runnable>(
+								asyncQueueCapacity > 0 ? asyncQueueCapacity : Integer.MAX_VALUE)),
+				subscriberExceptionHandler) : new EventBus(subscriberExceptionHandler);
 		this.storeRequestBus.register(connector);
 	}
 

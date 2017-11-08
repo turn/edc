@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 import com.google.common.eventbus.Subscribe;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,13 +36,8 @@ public abstract class StorageConnector {
 	public abstract void close();
 
 	@Subscribe
-	public void handleStoreRequest(StoreRequest request) {
+	public void handleStoreRequest(StoreRequest request) throws IOException {
 		LOG.debug("Storing {}", request.toString());
-		try {
-			this.set(request.getKey(), request.getSubkey(), request.getPayload(), request.getTtl(), 10);
-		} catch (IOException e) {
-			LOG.error("Store request failed to {}", this.toString());
-			LOG.debug(ExceptionUtils.getStackTrace(e));
-		}
+		this.set(request.getKey(), request.getSubkey(), request.getPayload(), request.getTtl(), 10);
 	}
 }

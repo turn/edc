@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Turn Inc. All Rights Reserved.
+ * Copyright (C) 2016-2017 Turn Inc. All Rights Reserved.
  * Proprietary and confidential.
  */
 
@@ -24,6 +24,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.eventbus.SubscriberExceptionHandler;
 import com.google.common.net.HostAndPort;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -309,14 +310,21 @@ public class EDCClient {
 
 			EDCStorageBuilder() {}
 
-			public EDCServiceDiscoveryBuilder usingRedisStorage() {
+			public EDCServiceDiscoveryBuilder usingRedisStorage(SubscriberExceptionHandler subscriberExceptionHandler) {
 				return new EDCServiceDiscoveryBuilder(
-						new ConnectionFactory(StorageType.REDIS)	);
+						new ConnectionFactory(StorageType.REDIS, subscriberExceptionHandler));
 			}
 
-			public EDCServiceDiscoveryBuilder usingMemcachedStorage() {
+			public EDCServiceDiscoveryBuilder usingAsyncRedisStorage(
+					SubscriberExceptionHandler subscriberExceptionHandler, int queueSize) {
 				return new EDCServiceDiscoveryBuilder(
-						new ConnectionFactory(StorageType.MEMCACHED));
+						new ConnectionFactory(StorageType.REDIS, subscriberExceptionHandler, queueSize));
+			}
+
+			public EDCServiceDiscoveryBuilder usingMemcachedStorage(
+					SubscriberExceptionHandler subscriberExceptionHandler) {
+				return new EDCServiceDiscoveryBuilder(
+						new ConnectionFactory(StorageType.MEMCACHED, subscriberExceptionHandler));
 			}
 		}
 

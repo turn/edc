@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Turn Inc. All Rights Reserved.
+ * Copyright (C) 2016-2017 Turn Inc. All Rights Reserved.
  * Proprietary and confidential.
  */
 
@@ -12,6 +12,8 @@ import com.turn.edc.storage.impl.SpymemcachedStorageConnector;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
+import com.google.common.eventbus.SubscriberExceptionContext;
+import com.google.common.eventbus.SubscriberExceptionHandler;
 import com.google.inject.Singleton;
 
 /**
@@ -23,21 +25,52 @@ import com.google.inject.Singleton;
 public class ConnectionFactory {
 
 	private final StorageType storageType;
+	private final SubscriberExceptionHandler subscriberExceptionHandler;
+	private final boolean async;
+	private final int asyncQueueSize;
 
-	public ConnectionFactory(StorageType storageType) {
+	/**
+	  * A factory that would create {@link StorageConnection} that handles requests synchronously
+	  * 
+	  * @param storageType
+	  * @param subscriberExceptionHandler
+	 */
+	public ConnectionFactory(StorageType storageType, SubscriberExceptionHandler subscriberExceptionHandler) {
 		this.storageType = storageType;
+		this.subscriberExceptionHandler = subscriberExceptionHandler;
+		this.async = false;
+		this.asyncQueueSize = 0;
 	}
 
-	public StorageConnection create(String host, String port, int timeout) throws IOException {
+	/**
+	  * A factory that would create {@link StorageConnection} that handles requests asynchronously
+	  * 
+	  * @param storageType
+	  * @param subscriberExceptionHandler
+	  * @param asyncEventQueueSize
+	 */
+	public ConnectionFactory(StorageType storageType, SubscriberExceptionHandler subscriberExceptionHandler,
+			int asyncEventQueueSize) {
+		this.storageType = storageType;
+		this.subscriberExceptionHandler = subscriberExceptionHandler;
+		this.async = true;
+		this.asyncQueueSize = asyncEventQueueSize;
+	}
+
+	public StorageConnection create(String host, int port, int timeout) throws IOException {
+		StorageConnector connector;
 		switch (storageType) {
 			case REDIS:
-				return new StorageConnection(new JedisStorageConnector(host, port, timeout));
+				connector = new JedisStorageConnector(host, port, timeout);
+				break;
 			case MEMCACHED:
-				return new StorageConnection(new SpymemcachedStorageConnector(host, port, timeout));
+				connector = new SpymemcachedStorageConnector(host, port, timeout);
+				break;
+			default:
+				return NULL_CONNECTION;			
 		}
 
-		// Should never reach here
-		return NULL_CONNECTION;
+		return new StorageConnection(connector, subscriberExceptionHandler, async, asyncQueueSize);
 	}
 
 	private static final StorageConnection NULL_CONNECTION = new StorageConnection(
@@ -72,6 +105,11 @@ public class ConnectionFactory {
 				public void close() {
 
 				}
-			}
-	);
+			}, new SubscriberExceptionHandler() {
+
+				@Override
+				public void handleException(Throwable exception, SubscriberExceptionContext context) {
+					// no-op
+				}
+			}, false, 0);
 }
