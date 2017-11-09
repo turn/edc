@@ -40,10 +40,10 @@ public class JedisStorageConnector extends StorageConnector {
 	// Weak reference since most of the time we don't need the string representation
 	private WeakReference<String> toString = new WeakReference<>(null);
 
-	public JedisStorageConnector(String host, String port, int timeout) throws IOException {
+	public JedisStorageConnector(String host, int port, int timeout) throws IOException {
 
 		this.host = host;
-		this.port = Integer.parseInt(port);
+		this.port = port;
 		JedisPoolConfig config = new JedisPoolConfig();
 		// TODO: make these configurable
 		config.setMaxWaitMillis(100);
@@ -55,7 +55,7 @@ public class JedisStorageConnector extends StorageConnector {
 		this.jedisPool = new JedisPool(config, this.host, this.port, 0, timeout, null, Protocol.DEFAULT_DATABASE, null);
 
 		// Try pinging once
-		try (Jedis jedis = jedisPool.getResource()){
+		try (Jedis jedis = jedisPool.getResource()) {
 			if (!jedis.ping().equals("PONG")) {
 				throw new IOException("Could not reach redis instance: " + toString());
 			}
@@ -74,7 +74,7 @@ public class JedisStorageConnector extends StorageConnector {
 		}
 
 		// Jedis instance will be auto-returned to the pool
-		try (Jedis jedis = jedisPool.getResource()){
+		try (Jedis jedis = jedisPool.getResource()) {
 			// Test connectivity, this is cheaper than a full validation (i.e. ping)
 			if (!jedis.isConnected()) {
 				jedis.connect();
@@ -101,7 +101,7 @@ public class JedisStorageConnector extends StorageConnector {
 		}
 
 		// Jedis instance will be auto-returned to the pool
-		try (Jedis jedis = jedisPool.getResource()){
+		try (Jedis jedis = jedisPool.getResource()) {
 			// Test connectivity, this is cheaper than a full validation (i.e. ping)
 			if (!jedis.isConnected()) {
 				jedis.connect();
@@ -155,4 +155,13 @@ public class JedisStorageConnector extends StorageConnector {
 		}
 		return this.toString.get();
 	}
+
+	public String getHost() {
+		return this.host;
+	}
+
+	public int getPort() {
+		return this.port;
+	}
+
 }
