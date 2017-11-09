@@ -94,7 +94,6 @@ public class RequestRouter extends DiscoveryListener {
 		Map<Integer, StorageConnection> newRoutingMap = Maps.newConcurrentMap();
 
 		List<CacheInstance> unestablishedConnections = Lists.newArrayList();
-		boolean foundBrokenConnection = false;
 		// Update connection map with new list of available instances
 		for (CacheInstance instance : availableInstances) {
 			// If the connection already exists, reuse old connection
@@ -110,17 +109,16 @@ public class RequestRouter extends DiscoveryListener {
 							TIMEOUT
 					);
 					newRoutingMap.put(instance.hashCode(), newConnection);
-				} catch (IOException ioe) {
+				} catch (Exception ex) {
 					logger.error("Cache instance {} found but connection was not able to be established", instance.toString());
-					logger.debug(ExceptionUtils.getStackTrace(ioe));
+					logger.debug(ExceptionUtils.getStackTrace(ex));
 					unestablishedConnections.add(instance);
-					foundBrokenConnection = true;
 				}
 			}
 		}
 
 		// Update the selection layer with the broken connections removed
-		if (foundBrokenConnection) {
+		if (!unestablishedConnections.isEmpty()) {
 			logger.debug("Removing {} unestablished connections from the selection layer",
 					unestablishedConnections.size());
 
