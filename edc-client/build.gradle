@@ -4,7 +4,7 @@
  */
 
 group = 'com.turn'
-version = '0.5.2'
+version = '0.5.3'
 
 dependencies {
 	compile project(':edc-common')
@@ -18,7 +18,7 @@ dependencies {
             'redis.clients:jedis:2.8.1',
             'net.spy:spymemcached:2.10.3',
 
-            'com.orbitz.consul:consul-client:0.13.2',
+            'com.orbitz.consul:consul-client:0.16.1',
             'org.apache.curator:curator-x-discovery:2.4.2'
 			
 	// Upload Turn jar to Turn Maven
