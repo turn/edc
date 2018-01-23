@@ -10,15 +10,14 @@ import com.turn.edc.discovery.DiscoveryListener;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
 import com.orbitz.consul.cache.ConsulCache;
 import com.orbitz.consul.cache.KVCache;
 import com.orbitz.consul.cache.ServiceHealthKey;
 import com.orbitz.consul.model.health.ServiceHealth;
-import com.orbitz.consul.model.kv.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +62,7 @@ public class ConsulCacheListener implements ConsulCache.Listener<ServiceHealthKe
 						this.kvCache.getMap()
 								.get(hostAndPort.toString())
 								.getValueAsString();
-				cacheSize = Integer.parseInt(lookup.or("0"));
+				cacheSize = Integer.parseInt(lookup.orElse("0"));
 			} catch (Exception e) {
 				LOG.debug("KV lookup failed, default cache size of 0 will be used for {}",
 						hostAndPort.toString());

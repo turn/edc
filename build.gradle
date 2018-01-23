@@ -17,7 +17,6 @@ repositories {
     mavenCentral()
 }
 
-
 subprojects {
     apply plugin: 'java'
     apply plugin: 'maven'
@@ -34,4 +33,6 @@ subprojects {
 	if (!project.hasProperty("mavenPassword")){
 	    ext.mavenPassword = ""
 	}
+
+    task listAllDependencies(type: DependencyReportTask) {}
 }

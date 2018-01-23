@@ -12,8 +12,8 @@ import com.turn.edc.discovery.ServiceDiscovery;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
+import java.util.Optional;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
 import com.orbitz.consul.Consul;
@@ -134,7 +134,7 @@ public class ConsulServiceDiscovery extends DiscoveryListener implements Service
 
 			// Try getting cache size from kv-store
 			Optional<String> sizeLookup = consul.keyValueClient().getValueAsString(hostAndPort.toString());
-			int cacheSize = Integer.parseInt(sizeLookup.or("0"));
+			int cacheSize = Integer.parseInt(sizeLookup.orElse("0"));
 
 			newList.add(new CacheInstance(hostAndPort, cacheSize));
 		}

@@ -1,15 +1,21 @@
 /*
- * Copyright (C) 2016 Turn Inc. All Rights Reserved.
+ * Copyright (C) 2016-2018 Turn Inc. All Rights Reserved.
  * Proprietary and confidential.
  */
 
 group = 'com.turn'
-version = '0.5.3'
+version = '0.5.4'
+
+configurations.all {
+    resolutionStrategy {
+        force 'com.google.guava:guava:19.0'
+    }
+}
 
 dependencies {
 	compile project(':edc-common')
 
-    compile 'com.google.guava:guava:13.0.1',
+    compile 'com.google.guava:guava:19.0',
             'com.google.inject:guice:3.0',
             'com.google.inject.extensions:guice-assistedinject:3.0',
             'org.apache.commons:commons-lang3:3.2.1',
@@ -18,7 +24,7 @@ dependencies {
             'redis.clients:jedis:2.8.1',
             'net.spy:spymemcached:2.10.3',
 
-            'com.orbitz.consul:consul-client:0.16.1',
+            'com.orbitz.consul:consul-client:1.0.0',
             'org.apache.curator:curator-x-discovery:2.4.2'
 			
 	// Upload Turn jar to Turn Maven
