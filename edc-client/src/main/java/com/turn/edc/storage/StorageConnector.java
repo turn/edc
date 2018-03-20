@@ -23,6 +23,10 @@ import org.slf4j.LoggerFactory;
 public abstract class StorageConnector {
 	private static final Logger LOG = LoggerFactory.getLogger(StorageConnector.class);
 
+	public abstract void initialize() throws IOException;
+
+	public abstract boolean isInitialized();
+
 	public abstract void set(String key, byte[] value, int ttl, int timeout) throws IOException;
 
 	public abstract void set(String key, String subkey, byte[] value, int ttl, int timeout) throws IOException;

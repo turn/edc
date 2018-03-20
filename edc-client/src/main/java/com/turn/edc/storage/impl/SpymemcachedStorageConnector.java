@@ -22,17 +22,32 @@ import net.spy.memcached.MemcachedClient;
  */
 public class SpymemcachedStorageConnector extends StorageConnector {
 
-	private final MemcachedClient client;
 	private final String host;
 	private final int port;
 
-	public SpymemcachedStorageConnector(String host, int port, int timeout) throws IOException {
+	private boolean isInitialzed;
+	private MemcachedClient client;
+
+	public SpymemcachedStorageConnector(String host, int port, int timeout) {
 		this.host = host;
 		this.port = port;
-		this.client = new MemcachedClient(new InetSocketAddress(this.host, this.port));
+
 		// TODO: Sanity check host and port
 	}
 
+	@Override
+	public void initialize() throws IOException {
+		if (isInitialized()) {
+			return;
+		}
+		this.client = new MemcachedClient(new InetSocketAddress(this.host, this.port));
+		isInitialzed = true;
+	}
+
+	@Override
+	public boolean isInitialized() {
+		return isInitialzed;
+	}
 
 	@Override
 	public void set(String key, byte[] value, int ttl, int timeout) throws IOException {

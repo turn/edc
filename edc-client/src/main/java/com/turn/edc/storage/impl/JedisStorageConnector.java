@@ -13,11 +13,14 @@ import java.lang.ref.WeakReference;
 import java.util.Base64;
 import java.util.concurrent.TimeoutException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Protocol;
+import redis.clients.jedis.exceptions.JedisException;
 
 /**
  * ConnectionFactory connector to Redis using Jedis library
@@ -27,6 +30,7 @@ import redis.clients.jedis.Protocol;
  */
 public class JedisStorageConnector extends StorageConnector {
 
+	private static final Logger logger = LoggerFactory.getLogger(JedisStorageConnector.class);
 	private static final String DEFAULT_SUBKEY = "_SINGLEFIELD";
 
 	private static final Long TTL_SET_FAILURE = 0l;
@@ -35,15 +39,27 @@ public class JedisStorageConnector extends StorageConnector {
 
 	private final String host;
 	private final int port;
-	private final JedisPool jedisPool;
+	private final int timeout;
+	private boolean isInitialzed = false;
+	private JedisPool jedisPool;
 
 	// Weak reference since most of the time we don't need the string representation
 	private WeakReference<String> toString = new WeakReference<>(null);
 
 	public JedisStorageConnector(String host, int port, int timeout) throws IOException {
-
 		this.host = host;
 		this.port = port;
+		this.timeout = timeout;
+	}
+
+	@Override
+	public void initialize() throws IOException {
+		if (isInitialized()) {
+			return;
+		}
+
+		logger.info("JedisStorageConnector ({}:{}) initializing ......", this.host,
+				this.port);
 		JedisPoolConfig config = new JedisPoolConfig();
 		// TODO: make these configurable
 		config.setMaxWaitMillis(100);
@@ -52,15 +68,29 @@ public class JedisStorageConnector extends StorageConnector {
 		config.setTestOnReturn(true);
 
 		// Set connection timeout to 0 so we can keep idle connects
-		this.jedisPool = new JedisPool(config, this.host, this.port, 0, timeout, null, Protocol.DEFAULT_DATABASE, null);
+		this.jedisPool = new JedisPool(config, this.host, this.port, 0, timeout, null,
+				Protocol.DEFAULT_DATABASE, null);
 
 		// Try pinging once
 		try (Jedis jedis = jedisPool.getResource()) {
 			if (!jedis.ping().equals("PONG")) {
 				throw new IOException("Could not reach redis instance: " + toString());
 			}
+		} catch (JedisException je) {
+			logger.error("JedisStorageConnector ({}:{}) could not reach redis instance. {}", this.host,
+					this.port, je.toString());
+			throw new IOException("Could not reach redis instance: " + toString());
 		}
+		logger.info("JedisStorageConnector ({}:{}) initialized.", this.host,
+				this.port);
+		isInitialzed = true;
 	}
+
+	@Override
+	public boolean isInitialized() {
+		return isInitialzed;
+	}
+
 
 	@Override
 	public void set(String key, byte[] value, int ttl, int timeout) throws IOException {

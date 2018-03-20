@@ -77,6 +77,16 @@ public class ConnectionFactory {
 			new StorageConnector() {
 
 				@Override
+				public void initialize() throws IOException {
+
+				}
+
+				@Override
+				public boolean isInitialized() {
+					return true;
+				}
+
+				@Override
 				public void set(String key, byte[] value, int ttl, int timeout) throws IOException {
 
 				}
