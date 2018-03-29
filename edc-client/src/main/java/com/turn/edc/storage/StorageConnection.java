@@ -29,6 +29,11 @@ public class StorageConnection {
 	private final StorageConnector connector;
 	private final EventBus storeRequestBus;
 
+	private StorageConnection(){
+		this.connector = null;
+		this.storeRequestBus = null;
+	}
+
 	public StorageConnection(StorageConnector connector, SubscriberExceptionHandler subscriberExceptionHandler,
 			boolean async, int asyncQueueCapacity) {
 		this.connector = connector;
@@ -39,6 +44,14 @@ public class StorageConnection {
 								asyncQueueCapacity > 0 ? asyncQueueCapacity : Integer.MAX_VALUE)),
 				subscriberExceptionHandler) : new EventBus(subscriberExceptionHandler);
 		this.storeRequestBus.register(connector);
+	}
+
+	public void connect() throws IOException {
+		this.connector.initialize();
+	}
+
+	public boolean isConnected() {
+		return this.connector.isInitialized();
 	}
 
 	public byte[] get(String key, String subkey, int timeout) throws IOException, TimeoutException, KeyNotFoundException {

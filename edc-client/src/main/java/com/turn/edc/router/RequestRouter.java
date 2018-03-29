@@ -5,12 +5,12 @@
 
 package com.turn.edc.router;
 
-import com.turn.edc.exception.KeyNotFoundException;
 import com.turn.edc.discovery.CacheInstance;
 import com.turn.edc.discovery.DiscoveryListener;
+import com.turn.edc.exception.KeyNotFoundException;
 import com.turn.edc.selection.CacheInstanceSelector;
-import com.turn.edc.storage.StorageConnection;
 import com.turn.edc.storage.ConnectionFactory;
+import com.turn.edc.storage.StorageConnection;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -40,7 +40,7 @@ public class RequestRouter extends DiscoveryListener {
 	private CacheInstanceSelector selectionLayer;
 
 	private volatile Map<Integer, StorageConnection> routingMap = Maps.newConcurrentMap();
-	private final static int TIMEOUT = 10;
+	private final static int TIMEOUT = 100;
 
 	public RequestRouter() {
 	}
@@ -109,6 +109,8 @@ public class RequestRouter extends DiscoveryListener {
 							TIMEOUT
 					);
 					newRoutingMap.put(instance.hashCode(), newConnection);
+					newConnection.connect();
+					logger.info("New connection is ready: {}", instance);
 				} catch (Exception ex) {
 					logger.error("Cache instance {} found but connection was not able to be established", instance.toString());
 					logger.debug(ExceptionUtils.getStackTrace(ex));
@@ -148,24 +150,38 @@ public class RequestRouter extends DiscoveryListener {
 	 * Get the storage connection
 	 * If the connection not found, create a new one
 	 * */
-	public StorageConnection getConnection(CacheInstance source) 
+	public StorageConnection getConnection(CacheInstance source)
 			throws TimeoutException, IOException {
 		StorageConnection connection = routingMap.get(source.hashCode());
 
-		if (connection == null) {
-			logger.info("Existing connection not found, creating new connection: {}", source);
-			try {
-				connection = connectorFactory.create(
-						source.getHostAndPort().getHostText(),
-						source.getHostAndPort().getPort(),
-						TIMEOUT
-				);
-			} catch (IOException ioe) {
-				logger.error("Unable to establish new connection to {}" + source);
-				throw ioe;
+		if (connection != null) {
+			if (connection.isConnected()) {
+				return connection;
 			}
-			routingMap.put(source.hashCode(), connection);
+
+			logger.info("Throttle this request while connect is still initializing: {}", source);
+			throw new IOException("Connect is still initializing: " + source);
 		}
+
+		logger.info("Existing connection not found, creating new connection: {}", source);
+		connection = connectorFactory.create(
+				source.getHostAndPort().getHostText(),
+				source.getHostAndPort().getPort(),
+				TIMEOUT
+		);
+		routingMap.put(source.hashCode(), connection);
+
+		try {
+			connection.connect();
+		} catch (IOException ioe) {
+			logger.error("Unable to establish new connection to {}" + source);
+			// Need to clean up the pool on exceptions.
+			// Check equality to make sure we don't remove initializing connection created by another thread.
+			routingMap.remove(source.hashCode(), connection);
+			throw ioe;
+		}
+		logger.info("New connection is ready: {}", source);
+
 		return connection;
 	}
 }
