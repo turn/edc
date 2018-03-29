@@ -6,18 +6,13 @@
 group = 'com.turn'
 version = '0.1'
 
-configurations.all {
-    resolutionStrategy {
-        force 'com.google.guava:guava:19.0'
-    }
-}
-
 dependencies {
 	compile project(':edc-common')
 
-
-	compile 'com.google.guava:guava:19.0',
-			'org.slf4j:slf4j-api:1.7.12',
+    compile ('com.google.guava:guava:22.0') {
+        force = true
+    }
+	compile 'org.slf4j:slf4j-api:1.7.12',
 			'org.apache.commons:commons-lang3:3.2.1',
 
 			'redis.clients:jedis:2.8.1',

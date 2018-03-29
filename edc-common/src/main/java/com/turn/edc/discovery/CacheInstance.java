@@ -14,7 +14,6 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.lang.ref.WeakReference;
 
-import com.google.common.io.Closeables;
 import com.google.common.net.HostAndPort;
 
 /**
@@ -108,7 +107,7 @@ public class CacheInstance {
 		ObjectOutput out;
 		try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
 			out = new ObjectOutputStream(bos);
-			out.writeObject(this.hostAndPort.getHostText());
+			out.writeObject(this.hostAndPort.getHost());
 			out.writeInt(this.hostAndPort.getPort());
 			out.writeInt(this.cacheSize);
 			out.flush();

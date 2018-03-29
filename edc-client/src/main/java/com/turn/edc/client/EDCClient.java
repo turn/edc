@@ -257,7 +257,7 @@ public class EDCClient {
 	 * @throws InvalidParameterException
 	 */
 	private void checkHostAndPort(HostAndPort hostAndPort) throws InvalidParameterException {
-		if (hostAndPort.getHostText() == null || hostAndPort.getHostText().isEmpty()) {
+		if (hostAndPort.getHost() == null || hostAndPort.getHost().isEmpty()) {
 			throw new InvalidParameterException("hostAndPort", hostAndPort.toString(), "Host cannot be empty");
 		}
 

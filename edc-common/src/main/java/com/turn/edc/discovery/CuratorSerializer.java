@@ -30,7 +30,7 @@ public class CuratorSerializer implements InstanceSerializer<CacheInstance> {
 		try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
 			out = new ObjectOutputStream(bos);
 			out.writeObject(instance.getName());
-			out.writeObject(payload.getHostAndPort().getHostText());
+			out.writeObject(payload.getHostAndPort().getHost());
 			out.writeInt(payload.getHostAndPort().getPort());
 			out.writeInt(payload.getCacheSize());
 			out.flush();
