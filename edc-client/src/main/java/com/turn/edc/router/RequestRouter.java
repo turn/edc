@@ -104,7 +104,7 @@ public class RequestRouter extends DiscoveryListener {
 				StorageConnection newConnection;
 				try {
 					newConnection = connectorFactory.create(
-							instance.getHostAndPort().getHostText(),
+							instance.getHostAndPort().getHost(),
 							instance.getHostAndPort().getPort(),
 							TIMEOUT
 					);
@@ -165,7 +165,7 @@ public class RequestRouter extends DiscoveryListener {
 
 		logger.info("Existing connection not found, creating new connection: {}", source);
 		connection = connectorFactory.create(
-				source.getHostAndPort().getHostText(),
+				source.getHostAndPort().getHost(),
 				source.getHostAndPort().getPort(),
 				TIMEOUT
 		);
