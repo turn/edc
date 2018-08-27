@@ -5,11 +5,14 @@
 
 package com.turn.edc.storage;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.turn.edc.exception.KeyNotFoundException;
 import com.turn.edc.router.StoreRequest;
 
 import java.io.IOException;
+
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -28,20 +31,23 @@ public class StorageConnection {
 
 	private final StorageConnector connector;
 	private final EventBus storeRequestBus;
+	private final ThreadPoolExecutor executor;
 
 	private StorageConnection(){
 		this.connector = null;
 		this.storeRequestBus = null;
+		this.executor = null;
 	}
 
 	public StorageConnection(StorageConnector connector, SubscriberExceptionHandler subscriberExceptionHandler,
 			boolean async, int asyncQueueCapacity) {
 		this.connector = connector;
-
+        ThreadFactory namedThreadFactory =
+                new ThreadFactoryBuilder().setNameFormat("edc-storageConnection-%d").build();
+		this.executor = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable> (
+						asyncQueueCapacity > 0 ? asyncQueueCapacity : Integer.MAX_VALUE), namedThreadFactory);
 		this.storeRequestBus = async ? new AsyncEventBus(
-				new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS,
-						new LinkedBlockingQueue<Runnable>(
-								asyncQueueCapacity > 0 ? asyncQueueCapacity : Integer.MAX_VALUE)),
+				executor,
 				subscriberExceptionHandler) : new EventBus(subscriberExceptionHandler);
 		this.storeRequestBus.register(connector);
 	}
@@ -71,5 +77,6 @@ public class StorageConnection {
 
 	public void close() {
 		this.connector.close();
+		this.executor.shutdown();
 	}
 }
